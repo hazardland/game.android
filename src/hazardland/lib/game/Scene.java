@@ -245,6 +245,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 				}
 			}
 			System.out.println ("texture decoding id is "+bitmaps.size());
+			world.load (2);
 		}
 		
 		if (gl!=null)
@@ -283,7 +284,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
 				bitmaps.get (resource).recycle ();
 				bitmaps.remove (resource);
-				world.load += 2;
+				world.load (2);
 			}
 		}
 	}

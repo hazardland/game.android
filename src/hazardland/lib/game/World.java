@@ -129,4 +129,19 @@ public class World
 		}		
 	}
 	
+	public int load ()
+	{
+		return load;
+	}
+	
+	public int load (int load)
+	{
+		this.load += load;
+		if (this.load>100)
+		{
+			this.load = load;
+		}
+		return this.load;
+	}
+	
 }
