@@ -1,0 +1,125 @@
+package hazardland.lib.game;
+
+import java.util.ArrayList;
+
+public class Job
+{
+	public static final int SHOW = 4;
+	public static final int HIDE = 5;
+	public static final int ENABLE = 6;
+	public static final int DISABLE = 7;
+	public static final int SLEEP = 8;
+	public static final int KILL = 9;
+	public int type;
+	public Vector vector;
+	public ArrayList <Job> childs = new ArrayList <Job>();
+	public ArrayList <Target> targets = new ArrayList <Target>();
+	public Subject subject;
+	boolean enabled = true;
+	private int job;
+	
+	public Job (int type)
+	{
+		this.type = type;
+	}
+
+	public Job (int type, int job)
+	{
+		this.type = type;
+		this.job = job;
+	}
+	
+	public boolean next ()
+	{
+		switch (type)
+		{
+			case Job.HIDE:
+				subject.hide ();
+			break;
+			case Job.SHOW:
+				subject.show ();
+			break;
+			case Job.ENABLE:
+				subject.enable ();
+			break;
+			case Job.DISABLE:
+				subject.disable ();
+			break;
+			case Job.KILL:
+				System.out.println ("killing job "+job);
+				subject.kill (job);
+			break;
+		}
+		enabled = false;
+		return false;
+	}
+	
+	public Job append (Job child)
+	{
+		childs.add (child);
+		return this;
+	}
+
+	public Job append (Job child, int subject)
+	{
+		child.target (subject);
+		childs.add (child);
+		return this;
+	}
+
+	public Job append (Job child, int type, int subject)
+	{
+		child.target (type, subject);
+		childs.add (child);
+		return this;
+	}
+	
+	public Job follow (Job child)
+	{
+		childs.add (child);
+		return child;
+	}
+
+	public Job follow (Job child, int subject)
+	{
+		child.target (subject);
+		childs.add (child);
+		return child;
+	}
+
+	public Job follow (Job child, int type, int subject)
+	{
+		child.target (type, subject);
+		childs.add (child);
+		return child;
+	}
+	
+	
+	public Job target (int subject)
+	{
+		targets.add (new Target (subject));
+		return this;
+	}
+	
+	public Job target (int type, int subject)
+	{
+		targets.add (new Target (type, subject));
+		return this;
+	}
+	
+	public void speed (float value, float slow)
+	{
+		this.vector.speed = value;
+		this.vector.slow = slow;
+	}
+
+	public void prepare ()
+	{
+		
+	}
+
+	public void finish ()
+	{
+		
+	}
+}
