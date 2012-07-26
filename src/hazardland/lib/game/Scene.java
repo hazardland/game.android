@@ -10,6 +10,7 @@ import javax.microedition.khronos.opengles.GL10;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -56,9 +57,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	private Sensor accelerometer;
 	Thread load;
 	private Bitmap bitmap;
+	private boolean active = false;
 	
 	//private AudioManager volume;
 	private  SoundPool sound;
+	public boolean pause = false;
 	
     public void create (Bundle state, float width, float height, boolean strech)
     {
@@ -72,8 +75,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		this.resources = getResources ();
 		this.screen = new Size (width, height);
 		this.strech = strech;
-		sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		//sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
+        //accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
         //volume = (AudioManager) getSystemService (AUDIO_SERVICE);        
     }
@@ -83,17 +86,21 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	{
 		if (bitmaps.size()>0)
 		{
-			for (int resource: bitmaps.keySet ()) 
+			if (!active)
+			{
+				active = true;
+			}
+			for (int resource: bitmaps.keySet ())
 			{
 				image (gl, resource);
 			}
-		}
+		}		
 //		// clear Screen and Depth Buffer
 		gl.glClear (GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 //		// Reset the Modelview Matrix
 		gl.glLoadIdentity ();
-		if (world.load==100)
+		if (world.load()==100)
 		{
 			draw (gl);
 			//System.out.println ("world subject count "+world.subjects.size ());
@@ -176,6 +183,18 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 	}
 	
+	public void pause ()
+	{
+		world.pause ();
+		pause = true;		
+	}
+	
+	public void resume ()
+	{
+		world.resume ();
+		pause = false;		
+	}
+	
 	public void open (GL10 gl)
 	{
 		
@@ -187,9 +206,22 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 	}
 	
+	public void swap (String scene)
+	{
+		try
+		{
+			Intent pageIntent = new Intent (this, Class.forName (scene));
+			startActivity (pageIntent);
+		}
+		catch (ClassNotFoundException e)
+		{
+			e.printStackTrace();
+		}		
+	}
+	
 	public void load (GL10 gl)
 	{
-		System.out.println ("loading "+world.load+"%");
+		System.out.println ("loading "+world.load()+"%");
 	}
 	
 	public void draw (GL10 gl)
@@ -198,40 +230,34 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			subject.draw (gl, scale);
 		}
-		try
-		{
-			java.lang.Thread.sleep (rate);
-		}
-		catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		}		
+		sleep (rate);
 	}
 	
 	public void image (int resource)
 	{
 		image (null, resource);	
 	}
-	
+
 	public void image (GL10 gl, int resource)
 	{
-		if (gl==null || load==null)
+		if (gl == null || load == null)
 		{
 			BitmapFactory.Options options = new BitmapFactory.Options ();
-		    options.inScaled = false;
-			
+			options.inScaled = false;
+
 			InputStream input = resources.openRawResource (resource);
 			try
 			{
-				if (load==null)
+				if (load == null)
 				{
 					bitmap = BitmapFactory.decodeStream (input, null, options);
 				}
 				else
 				{
-					bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
+					bitmaps.put (resource,
+							BitmapFactory.decodeStream (input, null, options));
 				}
-						
+
 			}
 			finally
 			{
@@ -244,36 +270,44 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 				}
 			}
-			System.out.println ("texture decoding id is "+bitmaps.size());
-			world.load (2);
+			System.out.println ("texture decoding id is " + bitmaps.size ());
+			if (world!=null)
+			{
+				world.load (2);
+			}
 		}
-		
-		if (gl!=null)
+
+		if (gl != null)
 		{
-			if (bitmap==null && bitmaps.get (resource).isRecycled ())
+			if (bitmap == null && bitmaps.get (resource).isRecycled ())
 			{
 				return;
 			}
 			int[] temp = new int[1];
 			gl.glGenTextures (1, temp, 0);
 			int id = temp[0];
-			
-			System.out.println ("texture binding id is "+id);
-			
-			//int id = next (gl);
+
+			System.out.println ("texture binding id is " + id);
+
+			// int id = next (gl);
 			images.put (resource, id);
-			
+
 			gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
-	
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-	
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-			
-			gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
-	
-			if (bitmap!=null)
+
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER,
+					GL10.GL_LINEAR);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER,
+					GL10.GL_LINEAR);
+
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S,
+					GL10.GL_CLAMP_TO_EDGE);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T,
+					GL10.GL_CLAMP_TO_EDGE);
+
+			gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
+					GL10.GL_REPLACE);
+
+			if (bitmap != null)
 			{
 				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmap, 0);
 				bitmap.recycle ();
@@ -281,11 +315,31 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 			else
 			{
-				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
+				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0,
+						bitmaps.get (resource), 0);
 				bitmaps.get (resource).recycle ();
 				bitmaps.remove (resource);
-				world.load (2);
+				if (world!=null)
+				{
+					world.load (2);
+				}
 			}
+		}
+	}
+	
+	public void hold ()
+	{
+		if (active)
+		{
+			while (bitmaps.size()>0)
+			{
+				sleep (1);
+				System.out.println ("holding "+bitmaps.size());
+			}
+		}
+		else
+		{
+			finish ();
 		}
 	}
 
@@ -361,12 +415,16 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			music.release ();
 		}
+		pause = true;
 	}
 
 	@Override
 	protected void onResume ()
 	{
 		super.onResume ();
+		sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
+        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        pause = false;
 	}
 	
 	public void sound (int sound)
@@ -431,6 +489,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 					musics.get (music).seekTo (0);
 					musics.get(music).setLooping (false);
 				break;
+				case Music.PAUSE:
+					musics.get(music).pause ();
+				break;				
 				case Music.VOLUME:
 					musics.get(music).setVolume (config, config);
 				break;				
@@ -450,6 +511,18 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	public void run ()
 	{
 		load ();
+	}
+	
+	public void sleep (int time)
+	{
+		try
+		{
+			java.lang.Thread.sleep (time);
+		}
+		catch (InterruptedException e)
+		{
+
+		}		
 	}
 
 }

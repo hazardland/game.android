@@ -85,6 +85,10 @@ public class Move extends Job
 	}
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		if (enabled)
 		{
 			if (vector.slow>0)

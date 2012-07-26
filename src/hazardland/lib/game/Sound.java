@@ -23,6 +23,10 @@ public class Sound extends Job
 
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		if (type==STOP)
 		{
 			subject.scene.sound (STOP, sound);

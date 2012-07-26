@@ -24,7 +24,6 @@ public abstract class Subject
 	public Position position;
 	public Sprite sprite;
 	public Space lock;
-	public Space edge = new Space (0,0,0,0);
 	public Point click;
 	public int input = -1;
 	public boolean enabled  = true;
@@ -34,6 +33,7 @@ public abstract class Subject
 	public boolean sensor = false;
 	public boolean touch = false;
 	public float weight = 1;
+	public boolean pause = false;
 	
 	public Subject (Scene scene, int id, float x, float y, float width, float height, Sprite sprite)
 	{
@@ -79,10 +79,6 @@ public abstract class Subject
 							{
 								if (target.type==Target.SUBJECT)
 								{
-									if (child.type==Job.KILL)
-									{
-										System.out.println ("we v got killer job to spread");
-									}
 									world.get (target.subject).job (child);
 								}
 								else
@@ -112,6 +108,10 @@ public abstract class Subject
 	
 	public Job job (Job job)
 	{
+		if (pause)
+		{
+			return job;
+		}
 		if (jobs.containsKey (job.type))
 		{
 			jobs.remove (job.type);
@@ -178,6 +178,10 @@ public abstract class Subject
 	
 	public boolean click (Input input)
 	{
+		if (pause)
+		{
+			return false;
+		}
 		if (this.input!=-1)
 		{
 			return false;
@@ -191,8 +195,17 @@ public abstract class Subject
 		return false;
 	}
 	
+	public void click ()
+	{
+		
+	}
+	
 	public boolean drag (Input input)
 	{
+		if (pause)
+		{
+			return false;
+		}		
 		if (this.input!=input.id)
 		{
 			return false;
@@ -212,6 +225,10 @@ public abstract class Subject
 		}
 		if (click!=null)
 		{
+			if (inside(input.stop.x,input.stop.y)!=null)
+			{
+				click ();
+			}
 			click = null;
 			this.input = -1;
 			return true;
@@ -292,5 +309,31 @@ public abstract class Subject
 	public void hide ()
 	{
 		this.visible = false;
+	}
+	
+	public void pause ()
+	{
+		if (!jobs.isEmpty ())
+		{
+			for (Job job : jobs.values()) 
+			{
+				job.pause ();
+			}
+		}
+		sprite.pause ();
+		pause = true;
+	}
+	
+	public void resume ()
+	{
+		if (!jobs.isEmpty ())
+		{
+			for (Job job : jobs.values()) 
+			{
+				job.resume ();
+			}
+		}
+		sprite.resume ();
+		pause = false;
 	}
 }

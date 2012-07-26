@@ -26,6 +26,7 @@ public class Sprite
 	public boolean reverse = false;
 	private boolean next = true;
 	public boolean play = true;
+	public boolean pause = false;
 	public int limit = 0;
 	private int current = 0;
 
@@ -49,7 +50,10 @@ public class Sprite
 	
 	public void draw (GL10 gl, Position position, Scale scale)
 	{
-		next();
+		if (!pause)
+		{
+			next();
+		}
 		
 		width = scale.width(size.width)*position.size;
 		height = scale.height(size.height)*position.size;
@@ -148,21 +152,32 @@ public class Sprite
 		}
 		if (limit>0 && current==limit)
 		{
-			pause ();
+			stop ();
 			return true;
 		}
 		return false;
 	}
 	
+
 	public void play ()
 	{
 		play = true;
 	}
+
+	public void resume ()
+	{
+		pause = false;
+	}
 	
-	public void pause ()
+	public void stop ()
 	{
 		play = false;
 		current = 0;
+	}
+	
+	public void pause ()
+	{
+		pause = true;
 	}
 	
 	public void last ()

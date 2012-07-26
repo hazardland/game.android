@@ -7,6 +7,7 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 	public static final int PLAY = 40;
 	public static final int STOP = 41;
 	public static final int VOLUME = 42;
+	public static final int PAUSE = 43;	
 	int music;
 	boolean play = false;
 	int loop = 0;
@@ -42,6 +43,10 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		if (type==STOP)
 		{
 			subject.scene.music (STOP, music);
@@ -79,6 +84,21 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 	public void onCompletion (MediaPlayer music)
 	{
 		enabled = false;
+	}
+	
+	public void pause ()
+	{
+		super.pause();
+		subject.scene.music (PAUSE, music);
+	}
+	
+	public void resume ()
+	{
+		if (pause)
+		{
+			subject.scene.music (PLAY, music);
+		}
+		super.resume ();
 	}
 
 }

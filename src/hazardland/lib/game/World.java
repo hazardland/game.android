@@ -15,7 +15,8 @@ public class World
 	public float height;
 	public float speed = 1;
 	public float slow = 100;
-	public int load  = 0;
+	private int load  = 0;
+	public boolean pause = false;
 	public World (float x, float y, float width, float height)
 	{
 		this.x = x;
@@ -136,12 +137,40 @@ public class World
 	
 	public int load (int load)
 	{
-		this.load += load;
-		if (this.load>100)
+		if (this.load+load>99)
 		{
-			this.load = load;
+			this.load = 99;
+		}
+		else
+		{
+			this.load += load;
 		}
 		return this.load;
+	}
+	
+	public void start ()
+	{
+		load = 100;
+		pause = false;
+	}
+	
+	public void pause ()
+	{
+		pause = true;
+		for (int position=subjects.size()-1; position>=0; position--) 
+		{
+			subjects.get(position).pause();
+		}		
+		
+	}
+	
+	public void resume ()
+	{
+		pause = false;
+		for (int position=subjects.size()-1; position>=0; position--) 
+		{
+			subjects.get(position).resume();
+		}		
 	}
 	
 }

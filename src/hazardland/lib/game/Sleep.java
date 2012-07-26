@@ -11,6 +11,10 @@ public class Sleep extends Job
 	}
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		if (from==0)
 		{
 			from = (int) System.currentTimeMillis();
@@ -19,7 +23,6 @@ public class Sleep extends Job
 		{
 			return true;
 		}
-		enabled = false;
 		return false;		
 	}
 	

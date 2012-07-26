@@ -16,6 +16,10 @@ public class Image extends Job
 	}
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		if (type==PLAY)
 		{
 			if (active)
@@ -30,7 +34,7 @@ public class Image extends Job
 		}
 		else if (type==PAUSE)
 		{
-			subject.sprite (sprite).pause ();
+			subject.sprite (sprite).stop ();
 			return false;
 		}
 		else if (type==FIRST)

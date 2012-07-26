@@ -17,6 +17,7 @@ public class Job
 	public Subject subject;
 	boolean enabled = true;
 	private int job;
+	public boolean pause = false;
 	
 	public Job (int type)
 	{
@@ -31,6 +32,10 @@ public class Job
 	
 	public boolean next ()
 	{
+		if (pause)
+		{
+			return true;
+		}
 		switch (type)
 		{
 			case Job.HIDE:
@@ -46,7 +51,6 @@ public class Job
 				subject.disable ();
 			break;
 			case Job.KILL:
-				System.out.println ("killing job "+job);
 				subject.kill (job);
 			break;
 		}
@@ -121,5 +125,15 @@ public class Job
 	public void finish ()
 	{
 		
+	}
+	
+	public void pause ()
+	{
+		pause = true;
+	}
+	
+	public void resume ()
+	{
+		pause = false;
 	}
 }
