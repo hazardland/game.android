@@ -16,23 +16,23 @@ public class Switch extends Subject
 			int limit = 0;
 			if (length==1)
 			{
-				sprites.put ("off", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (off, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
 				disable = on = off;
 			}
 			if (length==2)
 			{
-				sprites.put ("off", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
-				sprites.put ("on", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (off, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (on, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
 				disable = off;
 			}
 			else if (length>2)
 			{
 				limit = length - 2;
-				sprites.put ("off", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, limit, limit, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
-				sprites.put ("on", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width*(length-limit), 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
-				sprites.put ("disable", new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width*(length-limit+1), 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (off, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, limit, limit, 0, 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (on, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width*(length-limit), 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
+				sprites.put (disable, new Sprite (scene.images.get(image), 0, 0, width, height, Frame.generate (1, 1, 1, width*(length-limit+1), 0, width, height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height), new Size(1,1)))));
 			}
-			sprite ("off");
+			sprite (off);
 		}		
 	}
 
