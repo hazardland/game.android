@@ -42,13 +42,19 @@ public abstract class Subject
 		this.id = id;
 		this.size = new Size (width, height);
 		this.position = new Position (x, y, 1, 0);
-		sprites.put ("default", sprite);
+		if (sprite!=null)
+		{
+			sprites.put ("default", sprite);
+		}
 		if (this.id==-1)
 		{
 			this.id = world.subjects.size ();
 		}
 		world.add (this);
-		this.sprite = sprites.get ("default");
+		if (sprite!=null)
+		{
+			this.sprite = sprites.get ("default");
+		}
 	}
 	
 	public Subject draw (GL10 gl, Scale scale)
@@ -190,9 +196,15 @@ public abstract class Subject
 		if (click!=null)
 		{
 			this.input = input.id;
+			press ();
 			return true;
 		}
 		return false;
+	}
+	
+	public void press ()
+	{
+		
 	}
 	
 	public void click ()
@@ -291,14 +303,24 @@ public abstract class Subject
 		return this.sprite;
 	}
 	
-	public void disable ()
+	public boolean disable ()
 	{
-		this.enabled = false;
+		if (!enabled)
+		{
+			return false;
+		}
+		enabled = false;
+		return true;
 	}
 	
-	public void enable ()
+	public boolean enable ()
 	{
-		this.enabled = true;
+		if (enabled)
+		{
+			return false;
+		}
+		enabled = true;
+		return true;
 	}
 	
 	public void show ()
@@ -311,29 +333,39 @@ public abstract class Subject
 		this.visible = false;
 	}
 	
-	public void pause ()
+	public boolean pause ()
 	{
-		if (!jobs.isEmpty ())
+		if (!pause)
 		{
-			for (Job job : jobs.values()) 
+			if (!jobs.isEmpty ())
 			{
-				job.pause ();
+				for (Job job : jobs.values()) 
+				{
+					job.pause ();
+				}
 			}
+			sprite.pause ();
+			pause = true;
+			return true;
 		}
-		sprite.pause ();
-		pause = true;
+		return false;
 	}
 	
-	public void resume ()
+	public boolean resume ()
 	{
-		if (!jobs.isEmpty ())
+		if (pause)
 		{
-			for (Job job : jobs.values()) 
+			if (!jobs.isEmpty ())
 			{
-				job.resume ();
+				for (Job job : jobs.values()) 
+				{
+					job.resume ();
+				}
 			}
+			sprite.resume ();
+			pause = false;
+			return true;
 		}
-		sprite.resume ();
-		pause = false;
+		return false;
 	}
 }

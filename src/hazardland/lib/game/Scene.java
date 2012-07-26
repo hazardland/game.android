@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -32,17 +33,16 @@ import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
 
+@SuppressLint ("UseSparseArrays")
 public class Scene extends Activity implements Renderer,OnTouchListener,SensorEventListener,Runnable
 {
 	public Resources resources;
 	public SparseIntArray images = new SparseIntArray ();
 	public SparseIntArray sounds = new SparseIntArray ();
-	@SuppressLint ("UseSparseArrays")
 	public Map <Integer, MediaPlayer> musics = new HashMap <Integer, MediaPlayer> ();
-	@SuppressLint ("UseSparseArrays")
 	public Map <Integer, Input> inputs = new HashMap <Integer, Input> ();
-	@SuppressLint ("UseSparseArrays")
-	public Map <Integer, Bitmap> bitmaps = new HashMap <Integer, Bitmap> ();
+	public Map <Integer, Bitmap> bitmaps = new ConcurrentHashMap <Integer, Bitmap> ();
+	public Map <Integer, Size> sizes = new HashMap <Integer, Size> ();
 	public Scale scale;
 	public Scale input;
 	public Size screen;
@@ -56,7 +56,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	private SensorManager sensor;
 	private Sensor accelerometer;
 	Thread load;
-	private Bitmap bitmap;
+	//private Bitmap bitmap;
 	private boolean active = false;
 	
 	//private AudioManager volume;
@@ -240,7 +240,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 	public void image (GL10 gl, int resource)
 	{
-		if (gl == null || load == null)
+		if (gl==null || load==null)
 		{
 			BitmapFactory.Options options = new BitmapFactory.Options ();
 			options.inScaled = false;
@@ -248,16 +248,15 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			InputStream input = resources.openRawResource (resource);
 			try
 			{
-				if (load == null)
-				{
-					bitmap = BitmapFactory.decodeStream (input, null, options);
-				}
-				else
-				{
-					bitmaps.put (resource,
-							BitmapFactory.decodeStream (input, null, options));
-				}
-
+				bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
+				sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));
+				System.out.println ("putting size");
+			}
+			catch (OutOfMemoryError error) 
+			{
+				bitmaps.clear ();
+				kill (load);
+				finish ();
 			}
 			finally
 			{
@@ -277,9 +276,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 		}
 
-		if (gl != null)
+		if (gl!=null)
 		{
-			if (bitmap == null && bitmaps.get (resource).isRecycled ())
+			if (bitmaps.get (resource)==null || bitmaps.get (resource).isRecycled ())
 			{
 				return;
 			}
@@ -294,35 +293,20 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 			gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
 
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER,
-					GL10.GL_LINEAR);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER,
-					GL10.GL_LINEAR);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
 
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S,
-					GL10.GL_CLAMP_TO_EDGE);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T,
-					GL10.GL_CLAMP_TO_EDGE);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
-			gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
-					GL10.GL_REPLACE);
+			gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
 
-			if (bitmap != null)
+			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
+			bitmaps.get (resource).recycle ();
+			bitmaps.remove (resource);
+			if (world!=null)
 			{
-				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmap, 0);
-				bitmap.recycle ();
-				bitmap = null;
-			}
-			else
-			{
-				GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0,
-						bitmaps.get (resource), 0);
-				bitmaps.get (resource).recycle ();
-				bitmaps.remove (resource);
-				if (world!=null)
-				{
-					world.load (2);
-				}
+				world.load (2);
 			}
 		}
 	}
@@ -404,11 +388,13 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			world.apply (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
 		}
 	}
-
+	
 	@Override
 	protected void onPause ()
 	{
 		super.onPause ();
+		bitmaps.clear ();
+		kill (load);
 		sensor.unregisterListener (this);
 		sound.release ();
 		for (MediaPlayer music : musics.values ())
@@ -524,5 +510,13 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 		}		
 	}
-
+	
+	public void kill (Thread thread)
+	{
+		if (thread!=null && thread.isAlive ())
+		{
+			thread.interrupt ();
+			thread = null;
+		}
+	}
 }
