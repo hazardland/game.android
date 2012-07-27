@@ -36,34 +36,103 @@ import android.view.WindowManager;
 @SuppressLint ("UseSparseArrays")
 public class Scene extends Activity implements Renderer,OnTouchListener,SensorEventListener,Runnable
 {
-	public Resources resources;
-	public SparseIntArray images = new SparseIntArray ();
-	public SparseIntArray sounds = new SparseIntArray ();
-	public Map <Integer, MediaPlayer> musics = new HashMap <Integer, MediaPlayer> ();
-	public Map <Integer, Input> inputs = new HashMap <Integer, Input> ();
-	public Map <Integer, Bitmap> bitmaps = new ConcurrentHashMap <Integer, Bitmap> ();
-	public Map <Integer, Size> sizes = new HashMap <Integer, Size> ();
-	public Scale scale;
-	public Scale input;
-	public Size screen;
-	public Size display;
-	public World world;
-	public boolean strech = true;
-	float shift;
-	public Square square = new Square ();
+	/**
+	 * the view of gl
+	 */
 	public GLSurfaceView view;
-	public int rate = 20;
+	/**
+	 * sensor provider object
+	 */
 	private SensorManager sensor;
+	/**
+	 * accelerometer privider object
+	 */
 	private Sensor accelerometer;
-	Thread load;
-	//private Bitmap bitmap;
-	private boolean active = false;
-	
-	//private AudioManager volume;
+	/**
+	 * sound provider object
+	 */
 	private  SoundPool sound;
+	//private AudioManager volume;
+	
+	/**
+	 * the game loader thread
+	 */
+	private Thread load;
+
+	/**
+	 * resource provider object
+	 */
+	public Resources resources;
+	/**
+	 * holds resourse id opengl texture id mapping
+	 */
+	public SparseIntArray images = new SparseIntArray ();
+	/**
+	 * holds resource id sound id mappings
+	 */
+	public SparseIntArray sounds = new SparseIntArray ();
+	/**
+	 * holds music objects
+	 */
+	public Map <Integer, MediaPlayer> musics = new HashMap <Integer, MediaPlayer> ();
+	/**
+	 * holds input objects as many as fingers touching screen
+	 */
+	public Map <Integer, Input> inputs = new HashMap <Integer, Input> ();
+	/**
+	 * hodls bitmaps while load thread active and while not binded
+	 */
+	public Map <Integer, Bitmap> bitmaps = new ConcurrentHashMap <Integer, Bitmap> ();
+	/**
+	 * hodls all sizes of loaded textures
+	 */
+	public Map <Integer, Size> sizes = new HashMap <Integer, Size> ();
+
+	/**
+	 * converts screen width and height or x and y from screen virtual size to display phisical size
+	 */
+	public Scale scale;
+	/**
+	 * converts input width and height or x and y from display phisical size to screen size
+	 */
+	public Scale input;
+	/**
+	 * hods virtual size of screen
+	 */
+	public Size screen;
+	/**
+	 * holds devices physical size of display
+	 */
+	public Size display;
+	/**
+	 * the world of scene wich is responsible for delivering all input events and calculating hits and sending pause events to subjects
+	 */
+	public World world;
+	
+	/**
+	 * if screen is resize maintaining ascept ratio shift stores y axis shift amount value
+	 */
+	private float shift;
+	
+	/**
+	 * simple square object can be used for drawing squares or textured squares
+	 */
+	public Square square = new Square ();
+	/**
+	 * defines if drawing has begin
+	 */
+	private boolean active = false;
+	/**
+	 * defines if scene is paused
+	 */
 	public boolean pause = false;
 	
-    public void create (Bundle state, float width, float height, boolean strech)
+	/**
+	 * holds scene config
+	 */
+	public Config config = new Config ();
+	
+    public void create (Bundle state)
     {
     	super.onCreate (state);
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -73,12 +142,14 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
         setContentView(view);
         view.setOnTouchListener (this);
 		this.resources = getResources ();
-		this.screen = new Size (width, height);
-		this.strech = strech;
-		//sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
-        //accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-        //volume = (AudioManager) getSystemService (AUDIO_SERVICE);        
+		this.screen = new Size (config.width, config.height);
+		//this.strech = config.strech;
+
+        if (config.sound)
+        {
+        	sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+            //volume = (AudioManager) getSystemService (AUDIO_SERVICE);
+        }
     }
     
 	@Override
@@ -109,7 +180,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			load (gl);
 		}
-		if (!strech && shift>0)
+		if (!config.strech && shift>0)
 		{
 			square.draw (gl, 0, 0, -shift, display.width, shift, 0);
 			square.draw (gl, 0, 0, display.height, display.width, shift, 0);
@@ -120,7 +191,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	public void onSurfaceChanged (GL10 gl, int width, int height)
 	{
 		
-		if (!strech)
+		if (!config.strech)
 		{
 			display = new Size (width, width/(screen.width/screen.height));
 			shift = (height-display.height)/2;
@@ -140,7 +211,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 		gl.glOrthof (0, width, 0, height, -1f, 1f);
 		
-		if (!strech)
+		if (!config.strech)
 		{
 			gl.glTranslatef (0f, shift, 0.0f); // move the camera !!			
 		}
@@ -230,7 +301,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			subject.draw (gl, scale);
 		}
-		sleep (rate);
+		sleep (config.refresh);
 	}
 	
 	public void image (int resource)
@@ -395,8 +466,14 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		super.onPause ();
 		bitmaps.clear ();
 		kill (load);
-		sensor.unregisterListener (this);
-		sound.release ();
+		if (config.sensor)
+		{
+			sensor.unregisterListener (this);
+		}
+		if (config.sound)
+		{
+			sound.release ();
+		}
 		for (MediaPlayer music : musics.values ())
 		{
 			music.release ();
@@ -408,8 +485,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	protected void onResume ()
 	{
 		super.onResume ();
-		sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		if (config.sensor)
+		{
+			sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
+	        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		}
         pause = false;
 	}
 	
