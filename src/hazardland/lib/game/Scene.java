@@ -132,6 +132,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public Config config = new Config ();
 	
+    /**
+     * call this method to init the scene from activity onCreate method
+     * @param state
+     * its a bundle provided on onCreate method
+     */
     public void create (Bundle state)
     {
     	super.onCreate (state);
@@ -254,29 +259,66 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 	}
 	
+	/**
+	 * spread the world with pause signal
+	 * every subject.pause () will be called an subject wil; deside what to do
+	 * by default subject will pause all jobs and sprite plays
+	 * to prevent this just override subjects pause method
+	 */
 	public void pause ()
 	{
 		world.pause ();
 		pause = true;		
 	}
-	
+
+	/**
+	 * spread the world with resume signal
+	 * every subject.resume () will be called an subject will deside what to do
+	 * by default subject will resume all jobs and sprite plays
+	 * to prevent this just override subjects play method	
+	 */
 	public void resume ()
 	{
 		world.resume ();
 		pause = false;		
 	}
+
 	
+	/**
+	 * do the very first things in this method
+	 * it is called after config is affected and
+	 * scene is created
+	 * 
+	 * warn yourself that you cant draw from this method
+	 * just load some first stuff
+	 * like loader progress bar images or somethin
+	 * @param gl
+	 * also you can use that object for texture binding 
+	 */
 	public void open (GL10 gl)
 	{
 		
 	}
 	
 	
+	/**
+	 * this method is lounched from load thread
+	 * use it for non gl loading purposes
+	 * but you can also bind textures from it
+	 * as gl thread is runing wich watches
+	 * while you decode bitmaps for texture binding
+	 * and binds them
+	 */
 	public void load ()
 	{
 		
 	}
 	
+	/**
+	 * goto another scene
+	 * specify full class name of scene activity
+	 * @param scene
+	 */
 	public void swap (String scene)
 	{
 		try
@@ -290,11 +332,23 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}		
 	}
 	
+	/**
+	 * this method is called instead of draw (gl) while
+	 * you do world.start() from public void load () method
+	 * (see load method without gl param)
+	 * use this method for example for loader progress bar rendering
+	 * @param gl
+	 */
 	public void load (GL10 gl)
 	{
 		System.out.println ("loading "+world.load()+"%");
 	}
 	
+	/**
+	 * after doing world.start () in scene.load (non gl instance method)
+	 * it gl thread will call scene.draw method for drawing instead of scene.load (gl) method 
+	 * @param gl
+	 */
 	public void draw (GL10 gl)
 	{
 		for (Subject subject : world.subjects.values())
@@ -304,11 +358,27 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		sleep (config.refresh);
 	}
 	
+	
+	/**
+	 * just decode image for further texture binding
+	 * usually called from non gl instance load method
+	 * it prepares bitmaps for binding from parallel thread
+	 * @param resource
+	 * specify android drawable resource id
+	 */
 	public void image (int resource)
 	{
 		image (null, resource);	
 	}
 
+	
+	/**
+	 * decode bitmap and bind texture (if gl instance is presenet and load thread is not runing)
+	 * or decode bitmap for further texture bind call (if gl==null)
+	 * or texture bind which was previously decoded
+	 * @param gl
+	 * @param resource
+	 */
 	public void image (GL10 gl, int resource)
 	{
 		if (gl==null || load==null)
@@ -382,6 +452,13 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 	
+	
+	/**
+	 * caution: use it after you finish image loads (in scenl.load() method)
+	 * it will hold until all decoded bitmaps are binded and recycled
+	 * otherwise you will get black figures without textures
+	 * 
+	 */
 	public void hold ()
 	{
 		if (active)
@@ -493,11 +570,19 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
         pause = false;
 	}
 	
+	/**
+	 * prepare sound resource
+	 * @param sound
+	 */
 	public void sound (int sound)
 	{
 		sounds.put (sound, this.sound.load(getBaseContext(), sound, 1));
 	}
-	
+
+	/**
+	 * do some action with sounds see constants of class Sound
+	 * @param sound
+	 */
 	public int sound (int action, int sound)
 	{
 		return sound (action, sound, 0);
@@ -579,6 +664,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		load ();
 	}
 	
+	/**
+	 * sleep some
+	 * @param time
+	 */
 	public void sleep (int time)
 	{
 		try
@@ -591,6 +680,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}		
 	}
 	
+	/**
+	 * kill some thread
+	 * @param thread
+	 */
 	public void kill (Thread thread)
 	{
 		if (thread!=null && thread.isAlive ())
