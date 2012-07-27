@@ -7,8 +7,8 @@ hazardland
 Requirements
 ------------
 
-just include library
-better multitouch handling support from android 2.3.x
+1. just include library
+2. better multitouch handling support from android 2.3.x
 
 Usage
 -----
