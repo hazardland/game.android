@@ -1,6 +1,6 @@
 package hazardland.lib.game;
 
-public class Switch extends Subject
+public class Switch extends Entity
 {
 	private String off = "off";
 	private String on = "on";

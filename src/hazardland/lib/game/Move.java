@@ -35,16 +35,16 @@ public class Move extends Job
 		switch (type)
 		{
 			case Move.X:
-				subject.position.x = from;
+				entity.position.x = from;
 			break;
 			case Move.Y:
-				subject.position.y = from;
+				entity.position.y = from;
 			break;
 			case Move.CORNER:
-				subject.position.corner = from;
+				entity.position.corner = from;
 			break;
 			case Move.SIZE:
-				subject.position.size = from;
+				entity.position.size = from;
 			break;
 		}
 	}	
@@ -53,16 +53,16 @@ public class Move extends Job
 		switch (type)
 		{
 			case Move.X:
-				subject.position.x = to;
+				entity.position.x = to;
 			break;
 			case Move.Y:
-				subject.position.y = to;
+				entity.position.y = to;
 			break;
 			case Move.CORNER:
-				subject.position.corner = to;
+				entity.position.corner = to;
 			break;
 			case Move.SIZE:
-				subject.position.size = to;
+				entity.position.size = to;
 			break;
 		}
 	}
@@ -117,80 +117,80 @@ public class Move extends Job
 				switch (type)
 				{
 					case Move.X:
-						if (subject.position.x+vector.speed>=to || subject.position.x+vector.speed<=from)
+						if (entity.position.x+vector.speed>=to || entity.position.x+vector.speed<=from)
 						{
 							if (vector.speed<0)
 							{
-								subject.position.x = from;
+								entity.position.x = from;
 							}
 							else
 							{
-								subject.position.x = to;
+								entity.position.x = to;
 							}
 							vector.speed *= -1;
 							limit ();
 						}
 						else
 						{
-							subject.position.x += vector.speed;
+							entity.position.x += vector.speed;
 						}
 						//System.out.println ("Rotater vector.value is "+vector.value);
 					break;
 					case Move.Y:
-						if (subject.position.y+vector.speed>=to || subject.position.y+vector.speed<=from)
+						if (entity.position.y+vector.speed>=to || entity.position.y+vector.speed<=from)
 						{
 							if (vector.speed<0)
 							{
-								subject.position.y = from;
+								entity.position.y = from;
 							}
 							else
 							{
-								subject.position.y = to;
+								entity.position.y = to;
 							}
 							vector.speed *= -1;
 							limit ();
 						}
 						else
 						{
-							subject.position.y += vector.speed;
+							entity.position.y += vector.speed;
 						}
 					break;
 					case Move.CORNER:
-						if (subject.position.corner+vector.speed>=to || subject.position.corner+vector.speed<=from)
+						if (entity.position.corner+vector.speed>=to || entity.position.corner+vector.speed<=from)
 						{
 							if (vector.speed<0)
 							{
-								subject.position.corner = from;
+								entity.position.corner = from;
 							}
 							else
 							{
-								subject.position.corner = to;
+								entity.position.corner = to;
 							}
 							vector.speed *= -1;
 							limit ();
 						}
 						else
 						{
-							subject.position.corner += vector.speed;
+							entity.position.corner += vector.speed;
 						}	
 					break;
 					case Move.SIZE:
-						if (subject.position.size+vector.speed>=to || subject.position.size+vector.speed<=from)
+						if (entity.position.size+vector.speed>=to || entity.position.size+vector.speed<=from)
 						{
 							if (vector.speed<0)
 							{
-								subject.position.size = from;
+								entity.position.size = from;
 							}
 							else
 							{
-								subject.position.size = to;
+								entity.position.size = to;
 							}
 							vector.speed *= -1;
 							limit ();
 						}
 						else
 						{
-							subject.position.size += vector.speed;
+							entity.position.size += vector.speed;
 						}	
 					break;
 				}
@@ -200,72 +200,72 @@ public class Move extends Job
 				switch (type)
 				{
 					case Move.X:
-						if (subject.position.x+vector.speed>=to)
+						if (entity.position.x+vector.speed>=to)
 						{
-							subject.position.x = from;
+							entity.position.x = from;
 							limit ();
 						}
-						else if (subject.position.x+vector.speed<=from)
+						else if (entity.position.x+vector.speed<=from)
 						{
-							subject.position.x = to;
+							entity.position.x = to;
 							limit ();
 						}
 						else
 						{
-							subject.position.x += vector.speed;
+							entity.position.x += vector.speed;
 						}
 					break;
 					case Move.Y:
-						if (subject.position.y+vector.speed>=to)
+						if (entity.position.y+vector.speed>=to)
 						{
-							subject.position.y = from;
+							entity.position.y = from;
 							limit ();
 						}
-						else if (subject.position.y+vector.speed<=from)
+						else if (entity.position.y+vector.speed<=from)
 						{
-							subject.position.y = to;
+							entity.position.y = to;
 							limit ();
 						}
 						else
 						{
-							subject.position.y += vector.speed;
+							entity.position.y += vector.speed;
 						}
 					break;
 					case Move.CORNER:
-						if (subject.position.corner+vector.speed>=to)
+						if (entity.position.corner+vector.speed>=to)
 						{
-							subject.position.corner = from;
+							entity.position.corner = from;
 							limit ();
 						}
-						else if (subject.position.corner+vector.speed<=from)
+						else if (entity.position.corner+vector.speed<=from)
 						{
-							subject.position.corner = to;
+							entity.position.corner = to;
 							limit ();
 						}
 						else
 						{
-							subject.position.corner += vector.speed;
+							entity.position.corner += vector.speed;
 						}
 					break;
 					case Move.SIZE:
-						if (subject.position.size+vector.speed>=to)
+						if (entity.position.size+vector.speed>=to)
 						{
-							subject.position.size = from;
+							entity.position.size = from;
 							limit ();
 						}
-						else if (subject.position.size+vector.speed<=from)
+						else if (entity.position.size+vector.speed<=from)
 						{
-							subject.position.size = to;
+							entity.position.size = to;
 							limit ();
 						}
 						else
 						{
-							subject.position.size += vector.speed;
+							entity.position.size += vector.speed;
 						}
 					break;
 				}
 			}
-			subject.world.contact (subject, vector);			
+			entity.world.contact (entity, vector);			
 			return true;
 		}
 		return false;

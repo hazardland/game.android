@@ -105,7 +105,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public Size display;
 	/**
-	 * the world of scene wich is responsible for delivering all input events and calculating hits and sending pause events to subjects
+	 * the world of scene wich is responsible for delivering all input events and calculating hits and sending pause events to entities
 	 */
 	public World world;
 	
@@ -179,7 +179,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		if (world.load()==100)
 		{
 			draw (gl);
-			//System.out.println ("world subject count "+world.subjects.size ());
+			//System.out.println ("world entity count "+world.subjects.size ());
 		}
 		else
 		{
@@ -236,7 +236,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 		//load (gl);
 		
-        sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);		
+		if (config.sensor)
+		{
+			sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+		}
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) 
@@ -261,9 +264,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	/**
 	 * spread the world with pause signal
-	 * every subject.pause () will be called an subject wil; deside what to do
-	 * by default subject will pause all jobs and sprite plays
-	 * to prevent this just override subjects pause method
+	 * every entity.pause () will be called an entity wil; deside what to do
+	 * by default entity will pause all jobs and sprite plays
+	 * to prevent this just override entities pause method
 	 */
 	public void pause ()
 	{
@@ -273,9 +276,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 	/**
 	 * spread the world with resume signal
-	 * every subject.resume () will be called an subject will deside what to do
-	 * by default subject will resume all jobs and sprite plays
-	 * to prevent this just override subjects play method	
+	 * every entity.resume () will be called an entity will deside what to do
+	 * by default entity will resume all jobs and sprite plays
+	 * to prevent this just override entities play method	
 	 */
 	public void resume ()
 	{
@@ -351,9 +354,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void draw (GL10 gl)
 	{
-		for (Subject subject : world.subjects.values())
+		for (Entity entity : world.entities.values())
 		{
-			subject.draw (gl, scale);
+			entity.draw (gl, scale);
 		}
 		sleep (config.refresh);
 	}

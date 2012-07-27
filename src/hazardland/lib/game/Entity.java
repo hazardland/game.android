@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.microedition.khronos.opengles.GL10;
 
-public abstract class Subject
+public abstract class Entity
 {
 	public Map <String, Sprite> sprites = new HashMap <String, Sprite> ();
 	@SuppressLint ("UseSparseArrays")
@@ -35,7 +35,7 @@ public abstract class Subject
 	public float weight = 1;
 	public boolean pause = false;
 	
-	public Subject (Scene scene, int id, float x, float y, float width, float height, Sprite sprite)
+	public Entity (Scene scene, int id, float x, float y, float width, float height, Sprite sprite)
 	{
 		this.scene = scene;
 		this.world = scene.world;
@@ -48,7 +48,7 @@ public abstract class Subject
 		}
 		if (this.id==-1)
 		{
-			this.id = world.subjects.size ();
+			this.id = world.entities.size ();
 		}
 		world.add (this);
 		if (sprite!=null)
@@ -57,7 +57,7 @@ public abstract class Subject
 		}
 	}
 	
-	public Subject draw (GL10 gl, Scale scale)
+	public Entity draw (GL10 gl, Scale scale)
 	{
 		if (!jobs.isEmpty ())
 		{
@@ -122,7 +122,7 @@ public abstract class Subject
 		{
 			jobs.remove (job.type);
 		}
-		job.subject = this;
+		job.entity = this;
 		job.prepare ();
 		jobs.put (job.type, job);
 		return jobs.get (job.type);
@@ -273,16 +273,16 @@ public abstract class Subject
 		return new RectF (position.x, position.y, position.x+size.width, position.y+size.height);
 	}
 	
-	public boolean intersect (Subject subject, Vector vector)
+	public boolean intersect (Entity entity, Vector vector)
 	{
-		if (rectangle().intersect (subject.rectangle()))
+		if (rectangle().intersect (entity.rectangle()))
 		{
 			return true;
 		}			
 		return false;
 	}
 	
-	public void hit (Subject subject, Vector vector)
+	public void hit (Entity entity, Vector vector)
 	{
 		
 	}

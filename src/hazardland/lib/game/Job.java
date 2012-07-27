@@ -14,7 +14,7 @@ public class Job
 	public Vector vector;
 	public ArrayList <Job> childs = new ArrayList <Job>();
 	public ArrayList <Target> targets = new ArrayList <Target>();
-	public Subject subject;
+	public Entity entity;
 	boolean enabled = true;
 	private int job;
 	public boolean pause = false;
@@ -39,19 +39,19 @@ public class Job
 		switch (type)
 		{
 			case Job.HIDE:
-				subject.hide ();
+				entity.hide ();
 			break;
 			case Job.SHOW:
-				subject.show ();
+				entity.show ();
 			break;
 			case Job.ENABLE:
-				subject.enable ();
+				entity.enable ();
 			break;
 			case Job.DISABLE:
-				subject.disable ();
+				entity.disable ();
 			break;
 			case Job.KILL:
-				subject.kill (job);
+				entity.kill (job);
 			break;
 		}
 		enabled = false;

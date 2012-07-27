@@ -24,27 +24,27 @@ public class Image extends Job
 		{
 			if (active)
 			{
-				if (!subject.sprite.play)
+				if (!entity.sprite.play)
 				{
 					return false;
 				}
 			}
-			subject.sprite (sprite).play ();
+			entity.sprite (sprite).play ();
 			active = true;
 		}
 		else if (type==PAUSE)
 		{
-			subject.sprite (sprite).stop ();
+			entity.sprite (sprite).stop ();
 			return false;
 		}
 		else if (type==FIRST)
 		{
-			subject.sprite (sprite).first ();
+			entity.sprite (sprite).first ();
 			return false;
 		}
 		else if (type==LAST)
 		{
-			subject.sprite (sprite).last ();
+			entity.sprite (sprite).last ();
 			return false;
 		}
 		return true;

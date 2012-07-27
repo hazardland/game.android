@@ -37,7 +37,7 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 	{
 		if (type==PLAY)
 		{
-			subject.scene.music (music, this);
+			entity.scene.music (music, this);
 		}		
 	}
 
@@ -49,12 +49,12 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 		}
 		if (type==STOP)
 		{
-			subject.scene.music (STOP, music);
+			entity.scene.music (STOP, music);
 			return false;
 		}
 		else if (type==VOLUME)
 		{
-			subject.scene.music (VOLUME, music, volume);
+			entity.scene.music (VOLUME, music, volume);
 			return false;
 		}
 		else
@@ -65,7 +65,7 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 			}
 			if (!play)
 			{
-				subject.scene.music (PLAY, music, loop);
+				entity.scene.music (PLAY, music, loop);
 				play = true;
 			}
 			return true;
@@ -77,7 +77,7 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 		if (play)
 		{
 			enabled = false;
-			subject.scene.music (STOP, music);
+			entity.scene.music (STOP, music);
 		}
 	}
 
@@ -89,14 +89,14 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 	public void pause ()
 	{
 		super.pause();
-		subject.scene.music (PAUSE, music);
+		entity.scene.music (PAUSE, music);
 	}
 	
 	public void resume ()
 	{
 		if (pause)
 		{
-			subject.scene.music (PLAY, music);
+			entity.scene.music (PLAY, music);
 		}
 		super.resume ();
 	}

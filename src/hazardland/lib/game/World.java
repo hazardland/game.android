@@ -8,7 +8,7 @@ import android.annotation.SuppressLint;
 public class World
 {
 	@SuppressLint ("UseSparseArrays")
-	public Map <Integer, Subject> subjects = new HashMap <Integer, Subject> ();	
+	public Map <Integer, Entity> entities = new HashMap <Integer, Entity> ();	
 	public float x;
 	public float y;
 	public float width;
@@ -25,31 +25,31 @@ public class World
 		this.height = height;
 	}
 	
-	public boolean contact (Subject subject, Vector vector)
+	public boolean contact (Entity entity, Vector vector)
 	{
-		if (!subject.hit)
+		if (!entity.hit)
 		{
 			return false;
 		}
 		boolean contact = false;
 		if (vector.type==Move.X || vector.type==Move.Y)
 		{
-			for (int position=subjects.size()-1; position>=0; position--) 
+			for (int position=entities.size()-1; position>=0; position--) 
 			{
-				if (!subjects.get(position).hit)
+				if (!entities.get(position).hit)
 				{
 					continue;
 				}
-				if (subjects.get(position).id==subject.id)
+				if (entities.get(position).id==entity.id)
 				{
 					continue;
 				}
-				if (subjects.get(position).intersect(subject, vector))
+				if (entities.get(position).intersect(entity, vector))
 				{
 					contact = true;
 					try
 					{
-					    subjects.get(position).hit (subject, vector);
+					    entities.get(position).hit (entity, vector);
 					}
 					catch (NullPointerException exception)
 					{
@@ -63,37 +63,37 @@ public class World
 	
 	public void apply (Vector vector)
 	{
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			if (!subjects.get(position).sensor)
+			if (!entities.get(position).sensor)
 			{
 				continue;
 			}
-			subjects.get(position).apply (vector);
+			entities.get(position).apply (vector);
 		}		
 	}
 	
-	public Subject add (Subject subject)
+	public Entity add (Entity entity)
 	{
-		subjects.put (subject.id, subject);
-		return subjects.get (subject.id);
+		entities.put (entity.id, entity);
+		return entities.get (entity.id);
 	}
 	
-	public Subject get (int character)
+	public Entity get (int character)
 	{
-		return subjects.get (character);
+		return entities.get (character);
 	}
 	
 	
 	public void click (Input input)
 	{
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			if (!subjects.get(position).touch)
+			if (!entities.get(position).touch)
 			{
 				continue;
 			}			
-			if (subjects.get(position).click (input))
+			if (entities.get(position).click (input))
 			{
 				break;
 			}
@@ -102,13 +102,13 @@ public class World
 	
 	public void drag (Input input)
 	{
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			if (!subjects.get(position).touch)
+			if (!entities.get(position).touch)
 			{
 				continue;
 			}			
-			if (subjects.get(position).drag (input))
+			if (entities.get(position).drag (input))
 			{
 				break;
 			}
@@ -117,13 +117,13 @@ public class World
 	
 	public void stop (Input input)
 	{
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			if (!subjects.get(position).touch)
+			if (!entities.get(position).touch)
 			{
 				continue;
 			}			
-			if (subjects.get(position).stop (input))
+			if (entities.get(position).stop (input))
 			{
 				break;
 			}
@@ -157,9 +157,9 @@ public class World
 	public void pause ()
 	{
 		pause = true;
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			subjects.get(position).pause();
+			entities.get(position).pause();
 		}		
 		
 	}
@@ -167,9 +167,9 @@ public class World
 	public void resume ()
 	{
 		pause = false;
-		for (int position=subjects.size()-1; position>=0; position--) 
+		for (int position=entities.size()-1; position>=0; position--) 
 		{
-			subjects.get(position).resume();
+			entities.get(position).resume();
 		}		
 	}
 	

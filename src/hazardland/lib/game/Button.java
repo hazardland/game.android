@@ -4,7 +4,7 @@ package hazardland.lib.game;
  * @author BioHazard<br>
  * implements simple button all you need is to override public void Click () method 
  */
-public class Button extends Subject
+public class Button extends Entity
 {
 	protected String up = "up";
 	protected String down = "down";

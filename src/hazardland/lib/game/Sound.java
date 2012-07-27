@@ -29,7 +29,7 @@ public class Sound extends Job
 		}
 		if (type==STOP)
 		{
-			subject.scene.sound (STOP, sound);
+			entity.scene.sound (STOP, sound);
 			return false;
 		}
 		else
@@ -40,7 +40,7 @@ public class Sound extends Job
 			}
 			if (play==-1)
 			{
-				play = subject.scene.sound (PLAY, sound, loop);
+				play = entity.scene.sound (PLAY, sound, loop);
 			}
 			return true;
 		}
@@ -51,7 +51,7 @@ public class Sound extends Job
 		if (play!=-1)
 		{
 			enabled = false;
-			subject.scene.sound (STOP, play);
+			entity.scene.sound (STOP, play);
 		}
 	}
 
