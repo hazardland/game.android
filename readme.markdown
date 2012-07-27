@@ -44,15 +44,13 @@ we create scene
         }
         public void load ()
         {
-            image (R.drawable.s2_foni);
-            image (R.drawable.s2_grubeli1);
-            image (R.drawable.s2_grubeli2);
-            image (R.drawable.s2_grubeli3);
-            image (R.drawable.s2_grubeli4);
-            image (R.drawable.s2_chiti1);
-            image (R.drawable.s2_chiti2);
-            image (R.drawable.s2_chiti3);
-            image (R.drawable.s2_satvale);
+            image (R.drawable.sky);
+            image (R.drawable.bird1);
+            image (R.drawable.bird2);
+            image (R.drawable.bird3);
+            image (R.drawable.cloud1);
+            image (R.drawable.cloud2);
+            image (R.drawable.cloud3);
             hold ();
             
             new Background (this);
