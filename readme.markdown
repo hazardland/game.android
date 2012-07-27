@@ -20,7 +20,7 @@ we create cloud
         {
             super (scene, -1, 500, 600, 243, 52, R.drawable.cloud2);
             job (new Move (Move.X, 0-size.width, scene.screen.width, -5, 0, false, 0));
-            }
+        }
     }
 
 we create scene
