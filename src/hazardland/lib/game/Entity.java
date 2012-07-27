@@ -34,6 +34,34 @@ public abstract class Entity
 	public boolean touch = false;
 	public float weight = 1;
 	public boolean pause = false;
+
+	public Entity (Scene scene, int id, float x, float y, float width, float height, int image, int frames)
+	{
+		this (scene, id, x, y, width, height, new Sprite (scene.images.get(image), 0, 0, width, height,  
+				Frame.generate (1, frames, frames, 0, 0, width, height, new Scale (scene.sizes.get(image),
+						new Size (1, 1)))));
+	}	
+	
+	public Entity (Scene scene, int id, float x, float y, float width, float height, int image, int frames, Point from)
+	{
+		this (scene, id, x, y, width, height, new Sprite (scene.images.get(image), 0, 0, width, height,  
+				Frame.generate (1, frames, frames, from.x, from.y, width, height, new Scale (scene.sizes.get(image),
+						new Size (1, 1)))));
+	}	
+	
+	public Entity (Scene scene, int id, float x, float y, float width, float height, int image, Point from)
+	{
+		this (scene, id, x, y, width, height, new Sprite (scene.images.get(image), 0, 0, width, height,  
+				Frame.generate (1, 1, 1, from.x, from.y, width, height, new Scale (scene.sizes.get(image),
+						new Size (1, 1)))));
+	}
+	
+	public Entity (Scene scene, int id, float x, float y, float width, float height, int image)
+	{
+		this (scene, id, x, y, width, height, new Sprite (scene.images.get(image), 0, 0, width, height,  
+				Frame.generate (1, 1, 1, 0, 0, width, height, new Scale (new Size (width, height),
+						new Size (1, 1)))));
+	}
 	
 	public Entity (Scene scene, int id, float x, float y, float width, float height, Sprite sprite)
 	{
