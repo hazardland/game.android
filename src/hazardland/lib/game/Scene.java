@@ -25,6 +25,7 @@ import android.media.SoundPool;
 import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLUtils;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.SparseIntArray;
 import android.view.MotionEvent;
@@ -36,6 +37,11 @@ import android.view.WindowManager;
 @SuppressLint ("UseSparseArrays")
 public class Scene extends Activity implements Renderer,OnTouchListener,SensorEventListener,Runnable
 {
+	/**
+	 * use this for scene identify purposes
+	 */
+	public String name = "";
+	
 	/**
 	 * the view of gl
 	 */
@@ -226,8 +232,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 		System.out.println ("width and height is " + display.width + "x" + display.height
 				+ " scale is " + scale.width + "x" + scale.height);
+		System.out.println ("android version is "+Build.VERSION.RELEASE);
 		
 		world = new World (0, 0, screen.width, screen.height);
+		debug ("surface changed world elements "+world.entities.size());
 		
 		//view.queueEvent (this);
 		
@@ -239,6 +247,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		if (config.sensor)
 		{
 			sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+			//System.out.println ("orientation is " + getResources().getConfiguration().);
 		}
 	}
 
@@ -259,6 +268,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
 		
 		open (gl);
+		debug ("creating");
 		
 	}
 	
@@ -534,9 +544,16 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER)
 		{
-			//System.out.println (event.sensor.getName ()+" "+event.values.length);
-			world.apply (new Vector (Vector.X, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
-			world.apply (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
+			if (Build.VERSION.SDK_INT<15)
+			{
+				world.apply (new Vector (Vector.X, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
+				world.apply (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
+			}
+			else
+			{
+				world.apply (new Vector (Vector.X, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
+				world.apply (new Vector (Vector.Y, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
+			}
 		}
 	}
 	
@@ -559,6 +576,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			music.release ();
 		}
 		pause = true;
+		debug ("destroing");
 	}
 
 	@Override
@@ -571,6 +589,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		}
         pause = false;
+        debug ("resuming");
 	}
 	
 	/**
@@ -693,6 +712,18 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			thread.interrupt ();
 			thread = null;
+		}
+	}
+	
+	public void debug (String string)
+	{
+		if (name!="")
+		{
+			System.out.println ("hazardland("+name+"): "+string);
+		}
+		else
+		{
+			System.out.println ("hazardland: "+string);
 		}
 	}
 }
