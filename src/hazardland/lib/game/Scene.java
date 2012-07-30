@@ -34,6 +34,11 @@ import android.view.View.OnTouchListener;
 import android.view.Window;
 import android.view.WindowManager;
 
+/**
+ *the dark class does all job in dirt for you with opengl
+ *@author BioHazard
+ *
+ */
 @SuppressLint ("UseSparseArrays")
 public class Scene extends Activity implements Renderer,OnTouchListener,SensorEventListener,Runnable
 {
