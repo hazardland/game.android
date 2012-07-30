@@ -138,6 +138,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public Config config = new Config ();
 	
+	private boolean ready = false;
+	
     /**
      * call this method to init the scene from activity onCreate method
      * @param state
@@ -161,6 +163,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
         	sound = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
             //volume = (AudioManager) getSystemService (AUDIO_SERVICE);
         }
+		if (config.sensor)
+		{
+			sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
+	        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+		}        
     }
     
 	@Override
@@ -201,6 +208,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public void onSurfaceChanged (GL10 gl, int width, int height)
 	{
+		if (ready)
+		{
+			return;
+		}
 		
 		if (!config.strech)
 		{
@@ -235,7 +246,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		System.out.println ("android version is "+Build.VERSION.RELEASE);
 		
 		world = new World (0, 0, screen.width, screen.height);
-		debug ("surface changed world elements "+world.entities.size());
+		
+		//debug ("surface changed world elements "+world.entities.size());
 		
 		//view.queueEvent (this);
 		
@@ -246,9 +258,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 		if (config.sensor)
 		{
-			sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+			//sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 			//System.out.println ("orientation is " + getResources().getConfiguration().);
 		}
+		
+		ready = true;
 	}
 
 	public void onSurfaceCreated(GL10 gl, EGLConfig config) 
@@ -280,7 +294,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void pause ()
 	{
-		world.pause ();
+		if (world!=null)
+		{
+			world.pause ();
+		}
 		pause = true;		
 	}
 
@@ -292,7 +309,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void resume ()
 	{
-		world.resume ();
+		if (world!=null)
+		{
+			world.resume ();
+		}
 		pause = false;		
 	}
 
@@ -557,6 +577,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 	
+	
+	
 	@Override
 	protected void onPause ()
 	{
@@ -567,16 +589,17 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			sensor.unregisterListener (this);
 		}
-		if (config.sound)
-		{
-			sound.release ();
-		}
-		for (MediaPlayer music : musics.values ())
-		{
-			music.release ();
-		}
-		pause = true;
-		debug ("destroing");
+//		if (config.sound)
+//		{
+//			sound.release ();
+//		}
+//		for (MediaPlayer music : musics.values ())
+//		{
+//			music.release ();
+//		}
+//		pause = true;
+		pause ();
+		debug ("pausing");
 	}
 
 	@Override
@@ -585,10 +608,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		super.onResume ();
 		if (config.sensor)
 		{
-			sensor = (SensorManager)getSystemService(SENSOR_SERVICE);
-	        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+			sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
 		}
-        pause = false;
+        //pause = false;
+        resume ();
         debug ("resuming");
 	}
 	
@@ -711,6 +734,14 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		if (thread!=null && thread.isAlive ())
 		{
 			thread.interrupt ();
+			try
+			{
+				thread.join ();
+			}
+			catch (InterruptedException e)
+			{
+				Thread.currentThread ().interrupt ();
+			}
 			thread = null;
 		}
 	}
@@ -725,5 +756,27 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			System.out.println ("hazardland: "+string);
 		}
+	}
+	
+	public int time (int from)
+	{
+		if (from==0)
+		{
+			return 0;
+		}
+		return (int) System.currentTimeMillis()-from;
+	}
+	
+	public int time ()
+	{
+		return (int) System.currentTimeMillis();
+	}
+
+	@Override
+	protected void onDestroy ()
+	{
+		// TODO Auto-generated method stub
+		super.onDestroy ();
+		debug ("destroing");
 	}
 }

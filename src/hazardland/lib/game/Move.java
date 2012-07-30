@@ -22,14 +22,6 @@ public class Move extends Job
 		this.reverse = reverse;
 	}
 	
-	public void play ()
-	{
-		enabled = true;
-	}
-	public void pause ()
-	{
-		enabled = false;
-	}
 	public void first ()
 	{
 		switch (type)
