@@ -12,6 +12,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -153,8 +154,19 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
     public void create (Bundle state)
     {
     	super.onCreate (state);
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    	if (config.fullscreen)
+    	{
+    		requestWindowFeature(Window.FEATURE_NO_TITLE);
+    		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+    	}
+    	if (config.orientation==Config.LANDSCAPE)
+    	{
+    		setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+    	}
+    	else
+    	{
+    		setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+    	}
 		view = new GLSurfaceView(this);
 		view.setRenderer(this);
         setContentView(view);
@@ -203,7 +215,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			load (gl);
 		}
-		if (!config.strech && shift>0)
+		if (config.display==Config.FIT && shift>0)
 		{
 			square.draw (gl, 0, 0, -shift, display.width, shift, 0);
 			square.draw (gl, 0, 0, display.height, display.width, shift, 0);
@@ -218,12 +230,12 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			return;
 		}
 		
-		if (!config.strech)
+		if (config.display==Config.FIT)
 		{
 			display = new Size (width, width/(screen.width/screen.height));
 			shift = (height-display.height)/2;
 		}
-		else
+		else if (config.display==Config.STRETCH)
 		{
 			display = new Size (width, height);
 		}
@@ -238,7 +250,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 		gl.glOrthof (0, width, 0, height, -1f, 1f);
 		
-		if (!config.strech)
+		if (config.display==Config.FIT)
 		{
 			gl.glTranslatef (0f, shift, 0.0f); // move the camera !!			
 		}
@@ -516,7 +528,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public boolean onTouch (View v, MotionEvent event)
 	{
-		if (world==null)
+		if (world==null && !ready)
 		{
 			return false;
 		}		
@@ -563,7 +575,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public void onSensorChanged (SensorEvent event)
 	{
-		if (world==null)
+		if (world==null && !ready)
 		{
 			return;
 		}

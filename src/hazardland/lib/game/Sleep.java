@@ -15,12 +15,15 @@ public class Sleep extends Job
 		{
 			return true;
 		}
+		System.out.println ("from is "+from);
 		if (from==0)
 		{
 			from = (int) System.currentTimeMillis();
+			System.out.println ("from is "+from);
 		}
 		if (from+time<=(int)System.currentTimeMillis())
 		{
+			System.out.println ("waking "+(from+time)+" vs "+(int)System.currentTimeMillis());
 			return true;
 		}
 		return false;		

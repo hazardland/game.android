@@ -2,10 +2,25 @@ package hazardland.lib.game;
 
 public class Config
 {
+	public final static int STRETCH = 1;
+	public final static int FIT = 2;
+	public final static int NONE = 3;
+	public final static int LANDSCAPE = 4;
+	public final static int PORTRAIT = 5;
 	/**
-	 * strech or not the display
+	 * display mode
 	 */
-	public boolean strech = false;
+	public int display = FIT;
+	/**
+	 * display orientation
+	 */
+	public int orientation = LANDSCAPE;
+	
+	/**
+	 * fullscreen bool
+	 */
+	public boolean fullscreen = true;
+	
 	/**
 	 * virtual screen width
 	 */
