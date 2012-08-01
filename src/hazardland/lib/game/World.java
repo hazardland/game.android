@@ -17,6 +17,9 @@ public class World
 	public float slow = 100;
 	private int load  = 0;
 	public boolean pause = false;
+	public boolean hit = false;
+	public boolean touch = false;
+	public boolean sensor = false;
 	public World (float x, float y, float width, float height)
 	{
 		this.x = x;
@@ -27,7 +30,7 @@ public class World
 	
 	public boolean contact (Entity entity, Vector vector)
 	{
-		if (!entity.hit)
+		if (!hit || !entity.hit)
 		{
 			return false;
 		}
@@ -61,21 +64,37 @@ public class World
 		return contact;
 	}
 	
-	public void apply (Vector vector)
+	public void sensor (Vector vector)
 	{
+		if (!sensor)
+		{
+			return;
+		}
 		for (int position=entities.size()-1; position>=0; position--) 
 		{
 			if (!entities.get(position).sensor)
 			{
 				continue;
 			}
-			entities.get(position).apply (vector);
-		}		
+			entities.get(position).sensor (vector);
+		}	
 	}
 	
 	public Entity add (Entity entity)
 	{
 		entities.put (entity.id, entity);
+		if (entity.touch)
+		{
+			touch = true;
+		}
+		if (entity.hit)
+		{
+			hit = true;
+		}
+		if (entity.sensor)
+		{
+			sensor = true;
+		}
 		return entities.get (entity.id);
 	}
 	
@@ -87,6 +106,10 @@ public class World
 	
 	public void click (Input input)
 	{
+		if (!touch)
+		{
+			return;
+		}
 		for (int position=entities.size()-1; position>=0; position--) 
 		{
 			if (!entities.get(position).touch)
@@ -102,6 +125,10 @@ public class World
 	
 	public void drag (Input input)
 	{
+		if (!touch)
+		{
+			return;
+		}		
 		for (int position=entities.size()-1; position>=0; position--) 
 		{
 			if (!entities.get(position).touch)
@@ -117,6 +144,10 @@ public class World
 	
 	public void stop (Input input)
 	{
+		if (!touch)
+		{
+			return;
+		}		
 		for (int position=entities.size()-1; position>=0; position--) 
 		{
 			if (!entities.get(position).touch)

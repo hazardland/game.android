@@ -315,7 +315,7 @@ public abstract class Entity
 		
 	}
 	
-	public void apply (Vector vector)
+	public void sensor (Vector vector)
 	{
 		
 	}	

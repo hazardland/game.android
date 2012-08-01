@@ -528,7 +528,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public boolean onTouch (View v, MotionEvent event)
 	{
-		if (world==null && !ready)
+		if (world==null || !ready || !world.touch)
 		{
 			return false;
 		}		
@@ -575,21 +575,22 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public void onSensorChanged (SensorEvent event)
 	{
-		if (world==null && !ready)
+		if (world==null || !ready || !world.sensor)
 		{
+			debug ("returning "+ready);
 			return;
 		}
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER)
 		{
 			if (Build.VERSION.SDK_INT<15)
 			{
-				world.apply (new Vector (Vector.X, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
-				world.apply (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
+				world.sensor (new Vector (Vector.X, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
+				world.sensor (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
 			}
 			else
 			{
-				world.apply (new Vector (Vector.X, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
-				world.apply (new Vector (Vector.Y, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
+				world.sensor (new Vector (Vector.X, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
+				world.sensor (new Vector (Vector.Y, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
 			}
 		}
 	}

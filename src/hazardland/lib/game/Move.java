@@ -257,7 +257,10 @@ public class Move extends Job
 					break;
 				}
 			}
-			entity.world.contact (entity, vector);			
+			if (entity.hit)
+			{
+				entity.world.contact (entity, vector);
+			}
 			return true;
 		}
 		return false;
