@@ -38,6 +38,7 @@ public class Button extends Entity
 			sprite ("up");
 		}		
 	}
+	
 	@Override
 	public boolean click (Input input)
 	{

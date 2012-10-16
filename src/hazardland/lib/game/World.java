@@ -83,18 +83,6 @@ public class World
 	public Entity add (Entity entity)
 	{
 		entities.put (entity.id, entity);
-		if (entity.touch)
-		{
-			touch = true;
-		}
-		if (entity.hit)
-		{
-			hit = true;
-		}
-		if (entity.sensor)
-		{
-			sensor = true;
-		}
 		return entities.get (entity.id);
 	}
 	
@@ -181,6 +169,23 @@ public class World
 	
 	public void start ()
 	{
+		Entity entity;
+		for (int position=entities.size()-1; position>=0; position--) 
+		{
+			entity = entities.get(position); 
+			if (entity.touch)
+			{
+				touch = true;
+			}
+			if (entity.hit)
+			{
+				hit = true;
+			}
+			if (entity.sensor)
+			{
+				sensor = true;
+			}		
+		}		
 		load = 100;
 		pause = false;
 	}
@@ -192,7 +197,6 @@ public class World
 		{
 			entities.get(position).pause();
 		}		
-		
 	}
 	
 	public void resume ()

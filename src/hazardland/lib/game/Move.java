@@ -240,6 +240,7 @@ public class Move extends Job
 						}
 					break;
 					case Move.SIZE:
+						entity.scene.debug ("size move with speed "+vector.speed);
 						if (entity.position.size+vector.speed>=to)
 						{
 							entity.position.size = from;

@@ -41,7 +41,7 @@ public class Config
 	/**
 	 * sleep till next draw helps setting fps
 	 */
-	public int refresh = 25;
+	public int refresh = 50;
 	public Config ()
 	{
 		

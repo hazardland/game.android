@@ -146,6 +146,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	private boolean ready = false;
 	
+	private int last;
+	
     /**
      * call this method to init the scene from activity onCreate method
      * @param state
@@ -373,8 +375,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	{
 		try
 		{
+			debug (scene);
 			Intent pageIntent = new Intent (this, Class.forName (scene));
 			startActivity (pageIntent);
+			finish();
 		}
 		catch (ClassNotFoundException e)
 		{
@@ -405,7 +409,13 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			entity.draw (gl, scale);
 		}
-		sleep (config.refresh);
+		if (time(last)<config.refresh)
+		{
+			//debug ("pausing "+(config.refresh-time(last)));
+			sleep (config.refresh-time(last));
+			last = time();
+		}
+		
 	}
 	
 	
@@ -528,10 +538,22 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public boolean onTouch (View v, MotionEvent event)
 	{
+		if (world.touch)
+		{
+			debug ("world.touch is on");
+		}
+		if (ready)
+		{
+			debug ("world is ready");
+		}
+		if (world!=null)
+		{
+			debug ("world is not null");
+		}			
 		if (world==null || !ready || !world.touch)
 		{
 			return false;
-		}		
+		}
 		if (event.getAction()==MotionEvent.ACTION_DOWN || event.getAction ()==MotionEvent.ACTION_POINTER_DOWN || event.getAction ()==MotionEvent.ACTION_POINTER_2_DOWN || event.getAction ()==MotionEvent.ACTION_POINTER_3_DOWN || event.getAction ()==MotionEvent.ACTION_POINTER_1_DOWN)
 		{
 			inputs.put (Input.id (event), new Input(Input.id (event),world));
@@ -577,7 +599,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	{
 		if (world==null || !ready || !world.sensor)
 		{
-			debug ("returning "+ready);
+			//debug ("returning "+ready);
 			return;
 		}
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER)
@@ -793,8 +815,56 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	protected void onDestroy ()
 	{
-		// TODO Auto-generated method stub
 		super.onDestroy ();
 		debug ("destroing");
 	}
+	
+
+//
+//    public Bitmap SavePixels(GL10 gl)
+//            {
+//                int b[] = new int[Width * Height];
+//                IntBuffer ib = IntBuffer.wrap(b);
+//                ib.position(0);
+//                gl.glReadPixels(0, 0, Width, Height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, ib);
+//     
+//                // The bytes within the ints are in the wrong order for android, but convert into a
+//                // bitmap anyway. They're also bottom-to-top rather than top-to-bottom. We'll fix
+//                // this up soon using some fast API calls.
+//                Bitmap glbitmap = Bitmap.createBitmap(b, Width, Height, Bitmap.Config.ARGB_4444);
+//                ib = null; // we're done with ib
+//                b = null; // we're done with b, so allow the memory to be freed
+//     
+//                // To swap the color channels, we'll use a ColorMatrix/ColorMatrixFilter. From the Android docs:
+//                //
+//                // This is a 5x4 matrix: [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t ]
+//                // When applied to a color [r, g, b, a] the resulting color is computed as (after clamping):
+//                //
+//                // R' = a*R + b*G + c*B + d*A + e;
+//                // G' = f*R + g*G + h*B + i*A + j;
+//                // B' = k*R + l*G + m*B + n*A + o;
+//                // A' = p*R + q*G + r*B + s*A + t;
+//                //
+//                // We want to swap R and B, so the coefficients will be:
+//                // R' = B => 0,0,1,0,0
+//                // G' = G => 0,1,0,0,0
+//                // B' = R => 1,0,0,0,0
+//                // A' = A => 0,0,0,1,0
+//     
+//                final float[] cmVals = { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
+//     
+//                Paint paint = new Paint();
+//                paint.setColorFilter(new ColorMatrixColorFilter(new ColorMatrix(cmVals))); // our R<->B swapping paint
+//     
+//                Bitmap bitmap = Bitmap.createBitmap(Width, Height, Config.ARGB_4444); // the bitmap we're going to draw onto
+//                Canvas canvas = new Canvas(bitmap); // we draw to the bitmap through a canvas
+//                canvas.drawBitmap(glbitmap, 0, 0, paint); // draw the opengl bitmap onto the canvas, using the color swapping paint
+//                glbitmap = null; // we're done with glbitmap, let go of its memory
+//     
+//                // the image is still upside-down, so vertically flip it
+//                Matrix matrix = new Matrix();
+//                matrix.preScale(1.0f, -1.0f); // scaling: x = x, y = -y, i.e. vertically flip
+//                return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // new bitmap, using the flipping matrix
+//            }
+     	
 }

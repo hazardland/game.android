@@ -63,6 +63,21 @@ public abstract class Entity
 						new Size (1, 1)))));
 	}
 	
+	public Entity (Scene scene, float x, float y, int image)
+	{
+		this (scene, -1, x, y, scene.sizes.get(image).width, scene.sizes.get(image).height, new Sprite (scene.images.get(image), 0, 0, scene.sizes.get(image).width, scene.sizes.get(image).height,  
+				Frame.generate (1, 1, 1, 0, 0, scene.sizes.get(image).width, scene.sizes.get(image).height, new Scale (new Size (scene.sizes.get(image).width, scene.sizes.get(image).height),
+						new Size (1, 1)))));
+	}
+		
+	public void sprite (String name, float width, float height, int image, int frames)
+	{
+		this.sprites.put (name, new Sprite (scene.images.get (image), 0, 0, width, height,
+						Frame.generate (1, frames, frames, 0, 0, width, height,
+								new Scale (scene.sizes.get (image), new Size (
+										1, 1)))));
+	}
+	
 	public Entity (Scene scene, int id, float x, float y, float width, float height, Sprite sprite)
 	{
 		this.scene = scene;
@@ -396,4 +411,14 @@ public abstract class Entity
 		}
 		return false;
 	}
+	
+	public void custom (String condition)
+	{
+		
+	}
+	
+	public void custom ()
+	{
+		
+	}	
 }

@@ -22,16 +22,35 @@ public class Sprite
 
 	//Sprite related properties
 	
-	private int frame = 0 ;
+	public int frame = 0 ;
+
 	public boolean reverse = false;
 	private boolean next = true;
 	public boolean play = true;
 	public boolean pause = false;
 	public int limit = 0;
 	private int current = 0;
-
+	public Point center;
+	
 	boolean debug = true;
-
+	
+	public int skip = 0;
+	private int hold = 0;
+	
+	public boolean skip ()
+	{
+		if (skip>0)
+		{
+			if (hold==0)
+			{
+				hold = skip;
+				return false;
+			}
+			hold--;
+			return true;
+		}
+		return false;
+	}
 	
 	public Sprite (int image, float x, float y, float width, float height, Frame[] frames)
 	{
@@ -46,6 +65,7 @@ public class Sprite
 				1f,0f,0f,
 				0f,0f,0f,
 				});
+		center = new Point (size.width/2, size.height/2);
 	}
 	
 	public void draw (GL10 gl, Position position, Scale scale)
@@ -53,6 +73,11 @@ public class Sprite
 		if (!pause)
 		{
 			next();
+		}
+		
+		if (position.size<1)
+		{
+			System.out.println ("size decrasing " + position.size);
 		}
 		
 		width = scale.width(size.width)*position.size;
@@ -64,9 +89,9 @@ public class Sprite
 		
 		if (position.corner!=0)
 		{
-			gl.glTranslatef (width/2, height/2, 0f);
+			gl.glTranslatef (center.x, center.y, 0f);
 			gl.glRotatef (position.corner, 0f, 0f, 1f); // ROTATE !!!
-			gl.glTranslatef (-width/2, -height/2, 0f);			
+			gl.glTranslatef (-center.x, -center.y, 0f);			
 		}
 		
 		gl.glScalef (width, height, 0f); // ADJUST SIZE !!!
@@ -101,7 +126,16 @@ public class Sprite
 	
 	public void next ()
 	{
-		if (play && frames.length>1)
+		next (false);
+	}
+	
+	public void next (boolean manual)
+	{
+		if (skip())
+		{
+			return;
+		}
+		if ((play || manual) && frames.length>1)
 		{
 			if (frames.length==16)
 			{
