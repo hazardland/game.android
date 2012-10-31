@@ -14,4 +14,11 @@ public final class R {
         public static int ic_action_search=0x7f020000;
         public static int ic_launcher=0x7f020001;
     }
+    public static final class layout {
+        public static int main=0x7f030000;
+    }
+    public static final class string {
+        public static int app_name=0x7f040001;
+        public static int hello=0x7f040000;
+    }
 }

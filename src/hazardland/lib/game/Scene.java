@@ -9,6 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
+import android.R.anim;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
@@ -16,6 +17,8 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -349,7 +352,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void open (GL10 gl)
 	{
-		
+//		image (gl, R.drawable.progress_background);
+//		image (gl, R.drawable.progress_foreground);		
 	}
 	
 	
@@ -363,7 +367,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void load ()
 	{
-		
+//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
+//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);		
 	}
 	
 	/**
@@ -379,11 +384,17 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			Intent pageIntent = new Intent (this, Class.forName (scene));
 			startActivity (pageIntent);
 			finish();
+			close ();
 		}
 		catch (ClassNotFoundException e)
 		{
 			e.printStackTrace();
 		}		
+	}
+	
+	public void close ()
+	{
+		overridePendingTransition(anim.fade_in, anim.fade_out);		
 	}
 	
 	/**
@@ -453,6 +464,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 				sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));
 				System.out.println ("putting size");
 			}
+			catch (NullPointerException pointer) 
+			{
+				
+			}
 			catch (OutOfMemoryError error) 
 			{
 				bitmaps.clear ();
@@ -511,6 +526,42 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 		}
 	}
+
+	public void text (GL10 gl, int resource, String text, int size)
+	{
+		Bitmap bitmap = Bitmap.createBitmap ((int)((size*text.length())/1.5), size+20, Bitmap.Config.ARGB_4444);
+		Canvas canvas = new Canvas (bitmap);
+		bitmap.eraseColor(0);
+
+		Paint paint = new Paint();
+		paint.setTextSize (size);
+		paint.setAntiAlias (true);
+		paint.setARGB (0xff, 0x00, 0x00, 0x00);
+
+		canvas.drawText (text, 0, 60, paint);
+
+		int[] temp = new int[1];
+		gl.glGenTextures (1, temp, 0);
+		int id = temp[0];
+
+		images.put (resource, id);
+
+		gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
+
+		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+
+		gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
+
+		GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+		
+		sizes.put (resource, new Size (bitmap.getWidth (), bitmap.getHeight ()));
+		
+		bitmap.recycle ();
+	}
 	
 	
 	/**
@@ -525,8 +576,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		{
 			while (bitmaps.size()>0)
 			{
-				sleep (1);
-				System.out.println ("holding "+bitmaps.size());
+				sleep (5);
+				//System.out.println ("holding "+bitmaps.size());
 			}
 		}
 		else
@@ -538,18 +589,6 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public boolean onTouch (View v, MotionEvent event)
 	{
-		if (world.touch)
-		{
-			debug ("world.touch is on");
-		}
-		if (ready)
-		{
-			debug ("world is ready");
-		}
-		if (world!=null)
-		{
-			debug ("world is not null");
-		}			
 		if (world==null || !ready || !world.touch)
 		{
 			return false;
