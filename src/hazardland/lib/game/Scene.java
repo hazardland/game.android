@@ -18,7 +18,10 @@ import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -526,19 +529,53 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 		}
 	}
-
-	public void text (GL10 gl, int resource, String text, int size)
+	
+	public int text (GL10 gl, int resource, String text, int size, String font)
 	{
-		Bitmap bitmap = Bitmap.createBitmap ((int)((size*text.length())/1.5), size+20, Bitmap.Config.ARGB_4444);
-		Canvas canvas = new Canvas (bitmap);
-		bitmap.eraseColor(0);
-
+		
 		Paint paint = new Paint();
 		paint.setTextSize (size);
 		paint.setAntiAlias (true);
+		if (font!=null)
+		{
+			paint.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/"+font+".ttf"));
+		}
 		paint.setARGB (0xff, 0x00, 0x00, 0x00);
 
-		canvas.drawText (text, 0, 60, paint);
+		String[] lines = text.split("[\\n]");
+		
+		float width = 0;
+	    float height = 0;
+	    float string = 0;
+	    Rect bound = new Rect();
+	    
+		Paint.FontMetrics metrics = paint.getFontMetrics();
+		
+		for (String line : lines) 
+		{
+			paint.getTextBounds(line, 0, line.length(), bound);
+			if (bound.right>width)
+			{
+				width = bound.right;
+			}
+			if (bound.bottom+(-1)*bound.top>string)
+			{
+				string = bound.bottom+(-1)*bound.top;
+			}			
+			height += bound.bottom+(-1)*bound.top+metrics.leading+10; 
+			debug ("bound top:"+bound.top+" left:"+bound.left+" bottom:"+bound.bottom+" right:"+bound.right+" therefore height: "+(bound.bottom+(-1)*bound.top+metrics.leading));
+		}
+
+		Bitmap bitmap = Bitmap.createBitmap ((int)width+100, (int)height+100, Bitmap.Config.ARGB_4444);
+		Canvas canvas = new Canvas (bitmap);
+		bitmap.eraseColor(Color.RED);
+		
+		int position = 0;
+		for (String line : lines) 
+		{
+			position++;
+			canvas.drawText (line, 0, (int) ((string+metrics.leading)*position), paint);
+		}
 
 		int[] temp = new int[1];
 		gl.glGenTextures (1, temp, 0);
@@ -561,6 +598,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		sizes.put (resource, new Size (bitmap.getWidth (), bitmap.getHeight ()));
 		
 		bitmap.recycle ();
+		
+		return id;
 	}
 	
 	
