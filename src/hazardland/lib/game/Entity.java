@@ -393,7 +393,22 @@ public abstract class Entity
 		}
 		return false;
 	}
+
 	
+	public void pause (int type)
+	{
+		if (!jobs.isEmpty ())
+		{
+			for (Job job : jobs.values()) 
+			{
+				if (job.type==type)
+				{
+					job.pause ();
+				}
+			}
+		}
+	}
+
 	public boolean resume ()
 	{
 		if (pause)
@@ -411,6 +426,21 @@ public abstract class Entity
 		}
 		return false;
 	}
+
+	public void resume (int type)
+	{
+		if (!jobs.isEmpty ())
+		{
+			for (Job job : jobs.values()) 
+			{
+				if (job.type==type)
+				{
+					job.resume ();
+				}
+			}
+		}
+	}
+	
 	
 	public void custom (String condition)
 	{

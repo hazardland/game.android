@@ -38,6 +38,10 @@ public class Config
 	 * use sounds ? music is still avalible by setting this to false
 	 */
 	public boolean sound = true;
+	
+	public boolean text = true;
+	
+	public boolean music = true;
 	/**
 	 * sleep till next draw helps setting fps
 	 */

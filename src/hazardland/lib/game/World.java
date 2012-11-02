@@ -198,6 +198,14 @@ public class World
 			entities.get(position).pause();
 		}		
 	}
+
+	public void pause (int type)
+	{
+		for (int position=entities.size()-1; position>=0; position--) 
+		{
+			entities.get(position).pause(type);
+		}		
+	}	
 	
 	public void resume ()
 	{
@@ -205,6 +213,14 @@ public class World
 		for (int position=entities.size()-1; position>=0; position--) 
 		{
 			entities.get(position).resume();
+		}		
+	}
+
+	public void resume (int type)
+	{
+		for (int position=entities.size()-1; position>=0; position--) 
+		{
+			entities.get(position).resume(type);
 		}		
 	}
 	

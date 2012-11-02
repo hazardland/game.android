@@ -154,14 +154,38 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	private int last;
 	
+	public boolean finish = true;
+	
     /**
      * call this method to init the scene from activity onCreate method
      * @param state
      * its a bundle provided on onCreate method
      */
+	
+	public void receive (Bundle state)
+	{
+		if (state==null)
+		{
+			return;
+		}
+		if (state.containsKey("sound"))
+		{
+			config.sound = state.getBoolean("sound");
+		}
+		if (state.containsKey("music"))
+		{
+			config.music = state.getBoolean("music");
+		}		
+		if (state.containsKey("text"))
+		{
+			config.text = state.getBoolean("text");
+		}
+	}
+
     public void create (Bundle state)
     {
     	super.onCreate (state);
+    	receive (getIntent().getExtras());
     	if (config.fullscreen)
     	{
     		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -317,6 +341,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 * by default entity will pause all jobs and sprite plays
 	 * to prevent this just override entities pause method
 	 */
+	
 	public void pause ()
 	{
 		if (world!=null)
@@ -325,6 +350,15 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		pause = true;		
 	}
+	
+	public void pause (int type)
+	{
+		if (world!=null)
+		{
+			world.pause (type);
+		}
+	}
+	
 
 	/**
 	 * spread the world with resume signal
@@ -340,6 +374,15 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		pause = false;		
 	}
+	
+	public void resume (int type)
+	{
+		if (world!=null)
+		{
+			world.resume (type);
+		}
+	}
+	
 
 	
 	/**
@@ -384,15 +427,24 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		try
 		{
 			debug (scene);
-			Intent pageIntent = new Intent (this, Class.forName (scene));
-			startActivity (pageIntent);
-			finish();
+			Intent intent = new Intent (this, Class.forName (scene));
+			pass (intent);
+			startActivity (intent);
+			if (finish)
+			{
+				finish();
+			}
 			close ();
 		}
 		catch (ClassNotFoundException e)
 		{
 			e.printStackTrace();
 		}		
+	}
+	
+	public void pass (Intent intent)
+	{
+		
 	}
 	
 	public void close ()
@@ -739,7 +791,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void sound (int sound)
 	{
-		sounds.put (sound, this.sound.load(getBaseContext(), sound, 1));
+		if (config.sound)
+		{
+			sounds.put (sound, this.sound.load(getBaseContext(), sound, 1));
+		}
 	}
 
 	/**
@@ -753,26 +808,31 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	public int sound (int action, int sound, float config)
 	{
-//		float volume = this.volume.getStreamVolume(AudioManager.STREAM_MUSIC);
-//		volume = volume / this.volume.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		int result = 0;
-		switch (action)
+		int result = 0;		
+		if (this.config.sound)
 		{
-			case Sound.PLAY:
-				result = this.sound.play (sounds.get(sound), 1, 1, 1, (int)config, 1f);
-			break;
-			case Sound.STOP:
-				System.out.println ("stopping play "+sound);
-				this.sound.stop (sound);
-			break;
+	//		float volume = this.volume.getStreamVolume(AudioManager.STREAM_MUSIC);
+	//		volume = volume / this.volume.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+			switch (action)
+			{
+				case Sound.PLAY:
+					result = this.sound.play (sounds.get(sound), 1, 1, 1, (int)config, 1f);
+				break;
+				case Sound.STOP:
+					System.out.println ("stopping play "+sound);
+					this.sound.stop (sound);
+				break;
+			}
 		}
 		return result;
-		
 	}
 	
 	public void music (int music)
 	{
-		musics.put (music, MediaPlayer.create (getBaseContext(), music));
+		if (this.config.music)
+		{
+			musics.put (music, MediaPlayer.create (getBaseContext(), music));
+		}
 	}
 
 	public void music (int action, int music)
@@ -782,34 +842,37 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	public void music (int action, int music, float config)
 	{
-		if (musics.get(music)!=null)
+		if (this.config.music)
 		{
-			switch (action)
+			if (musics.get(music)!=null)
 			{
-				case Music.PLAY:
-					if (musics.get(music).isPlaying ())
-					{
+				switch (action)
+				{
+					case Music.PLAY:
+						if (musics.get(music).isPlaying ())
+						{
+							musics.get(music).pause ();
+							musics.get (music).seekTo (0);
+						}
+						if (config>0)
+						{
+							musics.get(music).setLooping (true);
+						}
+						musics.get(music).start ();
+					break;
+					case Music.STOP:
 						musics.get(music).pause ();
 						musics.get (music).seekTo (0);
-					}
-					if (config>0)
-					{
-						musics.get(music).setLooping (true);
-					}
-					musics.get(music).start ();
-				break;
-				case Music.STOP:
-					musics.get(music).pause ();
-					musics.get (music).seekTo (0);
-					musics.get(music).setLooping (false);
-				break;
-				case Music.PAUSE:
-					musics.get(music).pause ();
-				break;				
-				case Music.VOLUME:
-					musics.get(music).setVolume (config, config);
-				break;				
-			}			
+						musics.get(music).setLooping (false);
+					break;
+					case Music.PAUSE:
+						musics.get(music).pause ();
+					break;				
+					case Music.VOLUME:
+						musics.get(music).setVolume (config, config);
+					break;				
+				}			
+			}
 		}
 	}
 	
@@ -820,7 +883,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			musics.get(music).setOnCompletionListener (job);
 		}
 	}
-
+	
 	@Override
 	public void run ()
 	{
