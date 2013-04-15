@@ -1,5 +1,6 @@
-package hazardland.lib.game;
+package hazardland.lib.game.job;
 
+import hazardland.lib.game.Job;
 import android.media.MediaPlayer;
 
 public class Music extends Job implements android.media.MediaPlayer.OnCompletionListener
@@ -8,7 +9,7 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 	public static final int STOP = 41;
 	public static final int VOLUME = 42;
 	public static final int PAUSE = 43;	
-	int music;
+	public int music;
 	boolean play = false;
 	int loop = 0;
 	float volume;
@@ -79,10 +80,12 @@ public class Music extends Job implements android.media.MediaPlayer.OnCompletion
 			enabled = false;
 			entity.scene.music (STOP, music);
 		}
+		System.out.println ("music play finished 1");		
 	}
 
 	public void onCompletion (MediaPlayer music)
 	{
+		System.out.println ("music play finished 2");
 		enabled = false;
 	}
 	

@@ -3,7 +3,11 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15" />
+    <uses-sdk
+        android:minSdkVersion="10"
+        android:targetSdkVersion="10"
+        android:maxSdkVersion="17" 
+        />
 
     <application android:label="hazardland" android:icon="@drawable/ic_launcher">
 

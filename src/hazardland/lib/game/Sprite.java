@@ -1,13 +1,17 @@
 package hazardland.lib.game;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+
 import javax.microedition.khronos.opengles.GL10;
 
 public class Sprite
 {
 
 	//Basic resource related
-	
-	int image;
+
+	public String name;
 	
 	Point shift;
 	Size size;
@@ -17,7 +21,9 @@ public class Sprite
 	
 	//Frames or frame
 	
-	private  Frame[] frames;
+	//private  Frame[] frames;
+	public ArrayList<Frame> frames;
+	private HashMap<Integer,Integer> skips;
 	private Vertex shape;
 
 	//Sprite related properties
@@ -37,9 +43,30 @@ public class Sprite
 	public int skip = 0;
 	private int hold = 0;
 	
+	private static Vertex shape ()
+	{
+		return new Vertex (new float[]
+				{
+				1f,1f,0f,
+				0f,1f,0f,
+				1f,0f,0f,
+				0f,0f,0f,
+				});
+	}
+	
 	public boolean skip ()
 	{
-		if (skip>0)
+		if (skips!=null && skips.get(frame)!=null)
+		{
+			if (hold==0)
+			{
+				hold = skips.get(frame);
+				return false;
+			}
+			hold--;
+			return true;
+		}
+		else if (skip>0)
 		{
 			if (hold==0)
 			{
@@ -52,52 +79,89 @@ public class Sprite
 		return false;
 	}
 	
-	public Sprite (int image, float x, float y, float width, float height, Frame[] frames)
+	public Sprite (float x, float y, float width, float height, Frame[] frames)
 	{
-		this.image = image;
 		this.size = new Size (width, height);
 		this.shift = new Point (x, y);
-		this.frames = frames;
-		shape = new Vertex (new float[]
-				{
-				1f,1f,0f,
-				0f,1f,0f,
-				1f,0f,0f,
-				0f,0f,0f,
-				});
+		shape = shape ();
 		center = new Point (size.width/2, size.height/2);
+		if (frames==null)
+		{
+			this.frames = new ArrayList<Frame>();
+		}
+		else
+		{
+			this.frames = new ArrayList<Frame>(Arrays.asList(frames));
+		}
 	}
 	
+	public Sprite (String name, float x, float y, float width, float height, Frame[] frames)
+	{
+		this(x, y, width, height, frames);
+		this.name = name;
+	}	
+	
+	public Sprite (float x, float y, float width, float height)
+	{
+		this (x, y, width, height, null);
+	}
+	
+	public Sprite (float width, float height)
+	{
+		this(0, 0, width, height);
+	}
+
+	public Sprite add (Scene scene, int image, float x, float y, float width, float height)
+	{
+		frames.add (new Frame (scene, image, x, y, width, height));
+		return this;
+	}
+
+	public Sprite add (Scene scene, int image, float width, float height)
+	{
+		frames.add (new Frame (scene, image, 0, 0, width, height));
+		return this;
+	}
+
+	public Sprite add (int image)
+	{
+		frames.add (new Frame (null, image, 0, 0, 1, 1));
+		return this;
+	}
+
 	public void draw (GL10 gl, Position position, Scale scale)
 	{
-		if (!pause)
+		if (!pause && play)
 		{
 			next();
 		}
 		
-		if (position.size<1)
+		if (position.size()<1)
 		{
-			System.out.println ("size decrasing " + position.size);
+			//System.out.println ("size decrasing " + position.size());
 		}
 		
-		width = scale.width(size.width)*position.size;
-		height = scale.height(size.height)*position.size;
+		width = scale.width(size.width)*position.size();
+		height = scale.height(size.height)*position.size();
 
 		gl.glPushMatrix();
 		
-		gl.glTranslatef (scale.width(position.x+shift.x*position.size), scale.height(position.y+shift.y*position.size), 0f); //MOVE !!! 1f is size of figure if called after scaling, 1f is pixel if called before scaling
+		gl.glTranslatef (scale.width(position.x()+shift.x*position.size()), scale.height(position.y()+shift.y*position.size()), 0f); //MOVE !!! 1f is size of figure if called after scaling, 1f is pixel if called before scaling
 		
-		if (position.corner!=0)
+		if (position.corner()!=0)
 		{
-			gl.glTranslatef (center.x, center.y, 0f);
-			gl.glRotatef (position.corner, 0f, 0f, 1f); // ROTATE !!!
-			gl.glTranslatef (-center.x, -center.y, 0f);			
+			gl.glTranslatef (scale.width(center.x), scale.height(center.y), 0f);
+			gl.glRotatef (position.corner(), 0f, 0f, 1f); // ROTATE !!!
+			gl.glTranslatef (scale.width(-center.x), scale.height(-center.y), 0f);			
 		}
 		
 		gl.glScalef (width, height, 0f); // ADJUST SIZE !!!
 
+		//gl.glDisable(GL10.GL_TEXTURE_2D);
+		
 		// bind the previously generated texture
-		gl.glBindTexture(GL10.GL_TEXTURE_2D, image);
+		gl.glBindTexture(GL10.GL_TEXTURE_2D, frames.get(frame).image);	
+
 
 		// Point to our buffers
 		gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
@@ -111,7 +175,7 @@ public class Sprite
 		
 		// Point to our vertex buffer
 		gl.glVertexPointer (3, GL10.GL_FLOAT, 0, shape.buffer);
-		gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, frames[frame].value.buffer);
+		gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, frames.get(frame).value.buffer);
 
 		// Draw the vertices as triangle strip
 		gl.glDrawArrays (GL10.GL_TRIANGLE_STRIP, 0, shape.vertex.length / 3);
@@ -135,46 +199,49 @@ public class Sprite
 		{
 			return;
 		}
-		if ((play || manual) && frames.length>1)
+		if ((play || manual) && frames.size()>1)
 		{
-			if (frames.length==16)
+			if (next)
 			{
-				//System.out.println("trying to incrase position");
-			}				
-			if (frame==frames.length-1)
-			{
-				limit ();
-				if (reverse==true)
-				{
-					frame--;
-					next = false;						
-				}
-				else
+				if (frame==frames.size()-1)
 				{
 					frame = 0;
-					next = true;
 				}
-			}
-			else if (frame==0)
-			{
-				if (!next)
-				{
-					limit ();
-				}
-				frame++;
-				next = true;				
-			}
-			else
-			{
-				if (next)
+				else
 				{
 					frame ++;
 				}
-				else
+				//System.out.println("frame "+frame+" of "+(frames.size()-1)+" ["+name+"]");
+				if (frame==frames.size()-1)
 				{
-					frame --;
+					//System.out.println("frame last of "+(frames.size()-1)+" ["+name+"]");
+					if (reverse)
+					{
+						next = false;
+					}
+					if (limit())
+					{
+						return;
+					}
 				}
 			}
+			else
+			{
+				frame --;
+				//System.out.println("frame "+frame+" of "+(frames.size()-1)+" ["+name+"]");				
+				if (frame==0)
+				{
+					//System.out.println("frame first of "+(frames.size()-1)+" ["+name+"]");
+					if (reverse)
+					{
+						next = true;
+					}
+					if (limit())
+					{
+						return;
+					}
+				}
+			}			
 		}
 	}
 	
@@ -195,6 +262,19 @@ public class Sprite
 
 	public void play ()
 	{
+//		if (!play && frame==frames.size()-1)
+//		{
+//			if (!reverse)
+//			{
+//				frame = 0;
+//				System.out.println ("reseting frame to 0");
+//			}
+//			else
+//			{
+//				next = false;
+//			}
+//		}
+		hold = 0;
 		play = true;
 	}
 
@@ -216,12 +296,23 @@ public class Sprite
 	
 	public void last ()
 	{
-		frame = frames.length-1;
+		hold = 0;
+		frame = frames.size()-1;
 	}
 	
 	public void first ()
 	{
+		hold = 0;
 		frame = 0;
+	}
+	
+	public void skip (int frame, int time)
+	{
+		if (skips==null)
+		{
+			skips = new HashMap<Integer,Integer>();
+		}
+		skips.put(frame, time);
 	}
 	
 }

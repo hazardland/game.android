@@ -1,14 +1,17 @@
 package hazardland.lib.game;
 
-import java.util.HashMap;
-import java.util.Map;
+import hazardland.lib.game.job.Move;
+
+import java.util.ArrayList;
+import java.util.TreeMap;
 
 import android.annotation.SuppressLint;
 
 public class World
 {
 	@SuppressLint ("UseSparseArrays")
-	public Map <Integer, Entity> entities = new HashMap <Integer, Entity> ();	
+	//public TreeMap <Integer, Entity> entities = new TreeMap <Integer, Entity> ();
+	public ArrayList <Entity> entities = new ArrayList <Entity> ();
 	public float x;
 	public float y;
 	public float width;
@@ -20,6 +23,7 @@ public class World
 	public boolean hit = false;
 	public boolean touch = false;
 	public boolean sensor = false;
+	public boolean start = false;
 	public World (float x, float y, float width, float height)
 	{
 		this.x = x;
@@ -82,7 +86,8 @@ public class World
 	
 	public Entity add (Entity entity)
 	{
-		entities.put (entity.id, entity);
+		//entities.put (entity.id, entity);
+		entities.add(entity);
 		return entities.get (entity.id);
 	}
 	
@@ -94,6 +99,7 @@ public class World
 	
 	public void click (Input input)
 	{
+		System.out.println ("click "+input.click.x+", "+input.click.y);		
 		if (!touch)
 		{
 			return;
@@ -187,6 +193,7 @@ public class World
 			}		
 		}		
 		load = 100;
+		start = true;
 		pause = false;
 	}
 	
@@ -224,4 +231,10 @@ public class World
 		}		
 	}
 	
+	public void front (Entity entity)
+	{
+		entities.remove(entity);
+		//entity.id = entities.size()+2;
+		entities.add(entity);
+	}
 }

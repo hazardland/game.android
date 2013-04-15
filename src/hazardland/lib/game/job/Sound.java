@@ -1,4 +1,7 @@
-package hazardland.lib.game;
+package hazardland.lib.game.job;
+
+import hazardland.lib.game.Job;
+
 
 public class Sound extends Job
 {

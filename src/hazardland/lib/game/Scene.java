@@ -1,5 +1,8 @@
 package hazardland.lib.game;
 
+import hazardland.lib.game.job.Music;
+import hazardland.lib.game.job.Sound;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -17,11 +20,6 @@ import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -29,8 +27,8 @@ import android.hardware.SensorManager;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
-import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLSurfaceView;
+import android.opengl.GLSurfaceView.Renderer;
 import android.opengl.GLUtils;
 import android.os.Build;
 import android.os.Bundle;
@@ -80,31 +78,31 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	/**
 	 * resource provider object
 	 */
-	public Resources resources;
+	private Resources resources;
 	/**
 	 * holds resourse id opengl texture id mapping
 	 */
-	public SparseIntArray images = new SparseIntArray ();
+	private SparseIntArray images = new SparseIntArray ();
 	/**
 	 * holds resource id sound id mappings
 	 */
-	public SparseIntArray sounds = new SparseIntArray ();
+	private SparseIntArray sounds = new SparseIntArray ();
 	/**
 	 * holds music objects
 	 */
-	public Map <Integer, MediaPlayer> musics = new HashMap <Integer, MediaPlayer> ();
+	private Map <Integer, MediaPlayer> musics = new HashMap <Integer, MediaPlayer> ();
 	/**
 	 * holds input objects as many as fingers touching screen
 	 */
-	public Map <Integer, Input> inputs = new HashMap <Integer, Input> ();
+	private Map <Integer, Input> inputs = new HashMap <Integer, Input> ();
 	/**
 	 * hodls bitmaps while load thread active and while not binded
 	 */
-	public Map <Integer, Bitmap> bitmaps = new ConcurrentHashMap <Integer, Bitmap> ();
+	private Map <Integer, Bitmap> bitmaps = new ConcurrentHashMap <Integer, Bitmap> ();
 	/**
 	 * hodls all sizes of loaded textures
 	 */
-	public Map <Integer, Size> sizes = new HashMap <Integer, Size> ();
+	private Map <Integer, Size> sizes = new HashMap <Integer, Size> ();
 
 	/**
 	 * converts screen width and height or x and y from screen virtual size to display phisical size
@@ -113,9 +111,9 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	/**
 	 * converts input width and height or x and y from display phisical size to screen size
 	 */
-	public Scale input;
+	private Scale input;
 	/**
-	 * hods virtual size of screen
+	 * holds virtual size of screen
 	 */
 	public Size screen;
 	/**
@@ -130,7 +128,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	/**
 	 * if screen is resize maintaining ascept ratio shift stores y axis shift amount value
 	 */
-	private float shift;
+	public float shift;
 	
 	/**
 	 * simple square object can be used for drawing squares or textured squares
@@ -152,9 +150,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	private boolean ready = false;
 	
-	private int last;
+	private long last;
 	
 	public boolean finish = true;
+	
+	private int rotation;
 	
     /**
      * call this method to init the scene from activity onCreate method
@@ -222,6 +222,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public void onDrawFrame (GL10 gl)
 	{
+		//debug ("image: bitmaps size "+bitmaps.values().size());
 		if (bitmaps.size()>0)
 		{
 			if (!active)
@@ -230,15 +231,20 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 			for (int resource: bitmaps.keySet ())
 			{
+				debug ("image: entering binder for resource "+resource);
 				image (gl, resource);
 			}
-		}		
+		}
+		else
+		{
+			//debug ("image: bitmaps not populated");
+		}
 //		// clear Screen and Depth Buffer
 		gl.glClear (GL10.GL_COLOR_BUFFER_BIT | GL10.GL_DEPTH_BUFFER_BIT);
 		gl.glMatrixMode(GL10.GL_MODELVIEW);
 //		// Reset the Modelview Matrix
 		gl.glLoadIdentity ();
-		if (world.load()==100)
+		if (world.start)
 		{
 			draw (gl);
 			//System.out.println ("world entity count "+world.subjects.size ());
@@ -249,8 +255,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		if (config.display==Config.FIT && shift>0)
 		{
-			square.draw (gl, 0, 0, -shift, display.width, shift, 0);
-			square.draw (gl, 0, 0, display.height, display.width, shift, 0);
+			square.draw (gl, 0, null, 0, -shift, display.width, shift, 0);
+			square.draw (gl, 0, null, 0, display.height, display.width, shift, 0);
 		}
 	}
 
@@ -262,6 +268,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			return;
 		}
 		
+		rotation = getWindowManager().getDefaultDisplay().getRotation();
+
 		if (config.display==Config.FIT)
 		{
 			display = new Size (width, width/(screen.width/screen.height));
@@ -292,7 +300,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 		System.out.println ("width and height is " + display.width + "x" + display.height
 				+ " scale is " + scale.width + "x" + scale.height);
-		System.out.println ("android version is "+Build.VERSION.RELEASE);
+		System.out.println ("android version is "+Build.VERSION.RELEASE+" rotation is "+rotation);
+		
+		//android.view.Display
+		
+		
 		
 		world = new World (0, 0, screen.width, screen.height);
 		
@@ -332,7 +344,15 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		
 		open (gl);
 		debug ("creating");
-		
+//		if (opengl2())
+//		{
+//			debug ("opengl 2 detected");
+//		}
+//		else
+//		{
+//			debug ("opengl 2 not detected");
+//		}
+	
 	}
 	
 	/**
@@ -413,8 +433,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void load ()
 	{
-//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
-//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);		
+		
 	}
 	
 	/**
@@ -432,6 +451,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			startActivity (intent);
 			if (finish)
 			{
+				for (Bitmap bitmap : bitmaps.values())
+				{
+					bitmap.recycle();
+				}
+				bitmaps.clear();
 				finish();
 			}
 			close ();
@@ -461,7 +485,10 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void load (GL10 gl)
 	{
-		System.out.println ("loading "+world.load()+"%");
+//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
+//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);		
+		
+		//System.out.println ("loading "+world.load()+"%");
 	}
 	
 	/**
@@ -471,32 +498,28 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void draw (GL10 gl)
 	{
-		for (Entity entity : world.entities.values())
+//		for (Entity entity : world.entities)
+//		{
+//			entity.draw (gl, scale);
+//		}
+		for (int position=0; position<world.entities.size(); position++) 
 		{
-			entity.draw (gl, scale);
+			world.entities.get(position).draw(gl,scale);
+		}		
+		if (time(last)<config.refresh*1000000)
+		{
+			//debug ("pausing "+((config.refresh*1000000-time(last))/1000000));
+			sleep (config.refresh*1000000-time(last));
+			last = time();
 		}
-		if (time(last)<config.refresh)
+		else
 		{
-			//debug ("pausing "+(config.refresh-time(last)));
-			sleep (config.refresh-time(last));
+			//debug ("skipping pause cause time(last) time from last sleep is "+time(last));
 			last = time();
 		}
 		
 	}
 	
-	
-	/**
-	 * just decode image for further texture binding
-	 * usually called from non gl instance load method
-	 * it prepares bitmaps for binding from parallel thread
-	 * @param resource
-	 * specify android drawable resource id
-	 */
-	public void image (int resource)
-	{
-		image (null, resource);	
-	}
-
 	
 	/**
 	 * decode bitmap and bind texture (if gl instance is presenet and load thread is not runing)
@@ -509,132 +532,125 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	{
 		if (gl==null || load==null)
 		{
-			BitmapFactory.Options options = new BitmapFactory.Options ();
-			options.inScaled = false;
-
-			InputStream input = resources.openRawResource (resource);
-			try
-			{
-				bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
-				sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));
-				System.out.println ("putting size");
-			}
-			catch (NullPointerException pointer) 
-			{
-				
-			}
-			catch (OutOfMemoryError error) 
-			{
-				bitmaps.clear ();
-				kill (load);
-				finish ();
-			}
-			finally
-			{
-				try
-				{
-					input.close ();
-				}
-				catch (IOException e)
-				{
-
-				}
-			}
-			System.out.println ("texture decoding id is " + bitmaps.size ());
-			if (world!=null)
-			{
-				world.load (2);
-			}
+			decode (resource);
 		}
 
 		if (gl!=null)
 		{
-			if (bitmaps.get (resource)==null || bitmaps.get (resource).isRecycled ())
-			{
-				return;
-			}
-			int[] temp = new int[1];
-			gl.glGenTextures (1, temp, 0);
-			int id = temp[0];
-
-			System.out.println ("texture binding id is " + id);
-
-			// int id = next (gl);
-			images.put (resource, id);
-
-			gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
-
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-			gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-
-			gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
-
-			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
-			bitmaps.get (resource).recycle ();
-			bitmaps.remove (resource);
-			if (world!=null)
-			{
-				world.load (2);
-			}
+			bind (gl, resource);
 		}
 	}
 	
-	public int text (GL10 gl, int resource, String text, int size, String font)
+	/**
+	 * just decode image for further texture binding
+	 * usually called from non gl instance load method
+	 * it prepares bitmaps for binding from parallel thread
+	 * @param resource
+	 * specify android drawable resource id
+	 */	
+	public void decode (int resource)
 	{
-		
-		Paint paint = new Paint();
-		paint.setTextSize (size);
-		paint.setAntiAlias (true);
-		if (font!=null)
+		while (bitmaps.size()>1)
 		{
-			paint.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/"+font+".ttf"));
+			sleep (25);
 		}
-		paint.setARGB (0xff, 0x00, 0x00, 0x00);
+		BitmapFactory.Options options = new BitmapFactory.Options ();
+		options.inScaled = false;
+		InputStream input = null;
 
-		String[] lines = text.split("[\\n]");
-		
-		float width = 0;
-	    float height = 0;
-	    float string = 0;
-	    Rect bound = new Rect();
-	    
-		Paint.FontMetrics metrics = paint.getFontMetrics();
-		
-		for (String line : lines) 
+		try 
 		{
-			paint.getTextBounds(line, 0, line.length(), bound);
-			if (bound.right>width)
+			input = resources.openRawResource (resource);	
+		} 
+		catch (Resources.NotFoundException error) 
+		{
+			System.out.println ("image: resource not found "+resource);
+		}
+		
+		if (input==null)
+		{
+			fail ();
+		}
+		
+		try
+		{
+			bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
+			System.out.println ("image: decoded image "+resource);
+		}
+		catch (NullPointerException pointer) 
+		{
+			System.out.println ("image: failed to decode image "+resource);
+			fail ();
+		}
+		catch (OutOfMemoryError error) 
+		{
+			System.out.println ("image: out of memory while decoding image "+resource);
+			fail ();
+		}
+		finally
+		{
+			//System.out.println ("image: unknown error while decoding image "+resource);
+			try
 			{
-				width = bound.right;
+				input.close ();
 			}
-			if (bound.bottom+(-1)*bound.top>string)
+			catch (IOException e)
 			{
-				string = bound.bottom+(-1)*bound.top;
-			}			
-			height += bound.bottom+(-1)*bound.top+metrics.leading+10; 
-			debug ("bound top:"+bound.top+" left:"+bound.left+" bottom:"+bound.bottom+" right:"+bound.right+" therefore height: "+(bound.bottom+(-1)*bound.top+metrics.leading));
+				System.out.println ("image: io error while closing image stream "+resource);
+			}
+			//fail ();
 		}
-
-		Bitmap bitmap = Bitmap.createBitmap ((int)width+100, (int)height+100, Bitmap.Config.ARGB_4444);
-		Canvas canvas = new Canvas (bitmap);
-		bitmap.eraseColor(Color.RED);
 		
-		int position = 0;
-		for (String line : lines) 
+		
+		System.out.println ("image: textures left to load " + bitmaps.size ());
+		
+		if (world!=null)
 		{
-			position++;
-			canvas.drawText (line, 0, (int) ((string+metrics.leading)*position), paint);
+			world.load (2);
+		}		
+	}
+	
+	public void fail ()
+	{
+		debug ("image: global fail");
+		for (Bitmap bitmap : bitmaps.values())
+		{
+			if (!bitmap.isRecycled())
+			{
+				bitmap.recycle();
+			}
 		}
+		bitmaps.clear ();
+		kill (load);
+		finish ();		
+	}
+	
+	public void bind (GL10 gl, int resource)
+	{
 
+		if (bitmaps.get(resource)==null || bitmaps.get(resource).isRecycled())
+		{
+			System.out.println ("image: bind bitmap null or recycled " + resource);
+			return;
+		}
+		else
+		{
+			sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));			
+		}
+		
+		Size size = sizes.get (resource);
+		
 		int[] temp = new int[1];
 		gl.glGenTextures (1, temp, 0);
 		int id = temp[0];
 
+		//System.out.println ("texture binding id is " + id);
+
+		// int id = next (gl);
 		images.put (resource, id);
 
+		System.out.println ("image: texture binding id is " + id);		
+		
 		gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
 
 		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
@@ -644,15 +660,162 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
 
 		gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
+		
+		
+		int width = (int)size.width;
+		int height = (int)size.height;
+		
+		if (width!=size.width)
+		{
+			width += 1;
+		}
+		
+		if (height!=size.height)
+		{
+			height += 1;
+		}
+		
+		width = fix (width);
+		height = fix (height);
 
-		GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+		Bitmap resize = null;
 		
-		sizes.put (resource, new Size (bitmap.getWidth (), bitmap.getHeight ()));
+		if (width!=size.width || height!=size.height)
+		{
+			//resize = Bitmap.createBitmap(bitmaps.get(resource), 0, 0, width, height);
+			try
+			{
+				resize = Bitmap.createScaledBitmap(bitmaps.get(resource), width, height, false);
+				bitmaps.get(resource).recycle();
+				debug ("scale: scaling from "+size.width+"x"+size.height+" to "+width+"x"+height);
+				//Bitmap.create
+			}
+			catch (OutOfMemoryError e)
+			{
+				
+			}
+		}
 		
-		bitmap.recycle ();
+		if (resize!=null)
+		{
+			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, resize, 0);
+			resize.recycle();
+		}
+		else
+		{
+			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
+			debug ("scale: skipped for "+size.width+"x"+size.height+" image");
+		}
 		
-		return id;
+		//Bitmap.createBitmap(source, x, y, width, height);
+
+
+		
+		System.out.println ("image: bind success for image " + resource);
+		
+		if (bitmaps!=null && bitmaps.get(resource)!=null)
+		{
+			if (!bitmaps.get(resource).isRecycled())
+			{
+				//sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));				
+				try
+				{
+					bitmaps.get (resource).recycle ();
+					System.out.println ("image: putting size for " + resource);
+				}
+				catch (Exception e) 
+				{
+					System.out.println ("image: bind recycle unknow error for image " + resource);
+				}
+			}
+			else
+			{
+				System.out.println ("image: strange binded image " + resource + " already recycled");
+			}
+			bitmaps.remove (resource);
+			System.out.println ("image: removed binded resource "+resource);
+		}
+		else
+		{
+			System.out.println ("image: strange binded image " + resource + " already unset");
+		}
+		if (world!=null)
+		{
+			world.load (2);
+		}		
 	}
+	
+//	public int text (GL10 gl, int resource, String text, int size, String font)
+//	{
+//		
+//		Paint paint = new Paint();
+//		paint.setTextSize (size);
+//		paint.setAntiAlias (true);
+//		if (font!=null)
+//		{
+//			paint.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/"+font+".ttf"));
+//		}
+//		paint.setARGB (0xff, 0x00, 0x00, 0x00);
+//
+//		String[] lines = text.split("[\\n]");
+//		
+//		float width = 0;
+//	    float height = 0;
+//	    float string = 0;
+//	    Rect bound = new Rect();
+//	    
+//		Paint.FontMetrics metrics = paint.getFontMetrics();
+//		
+//		for (String line : lines) 
+//		{
+//			paint.getTextBounds(line, 0, line.length(), bound);
+//			if (bound.right>width)
+//			{
+//				width = bound.right;
+//			}
+//			if (bound.bottom+(-1)*bound.top>string)
+//			{
+//				string = bound.bottom+(-1)*bound.top;
+//			}			
+//			height += bound.bottom+(-1)*bound.top+metrics.leading+10; 
+//			debug ("bound top:"+bound.top+" left:"+bound.left+" bottom:"+bound.bottom+" right:"+bound.right+" therefore height: "+(bound.bottom+(-1)*bound.top+metrics.leading));
+//		}
+//
+//		Bitmap bitmap = Bitmap.createBitmap ((int)width+100, (int)height+100, Bitmap.Config.ARGB_4444);
+//		Canvas canvas = new Canvas (bitmap);
+//		bitmap.eraseColor(Color.RED);
+//		
+//		int position = 0;
+//		for (String line : lines) 
+//		{
+//			position++;
+//			canvas.drawText (line, 0, (int) ((string+metrics.leading)*position), paint);
+//		}
+//
+//		int[] temp = new int[1];
+//		gl.glGenTextures (1, temp, 0);
+//		int id = temp[0];
+//
+//		images.put (resource, id);
+//
+//		gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
+//
+//		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+//		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+//
+//		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+//		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+//
+//		gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
+//
+//		GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmap, 0);
+//		
+//		sizes.put (resource, new Size (bitmap.getWidth (), bitmap.getHeight ()));
+//		
+//		bitmap.recycle ();
+//		
+//		return id;
+//	}
 	
 	
 	/**
@@ -734,7 +897,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		if (event.sensor.getType()==Sensor.TYPE_ACCELEROMETER)
 		{
-			if (Build.VERSION.SDK_INT<15)
+			if (rotation==1 || rotation==3)
 			{
 				world.sensor (new Vector (Vector.X, event.values[1]*world.speed, event.values[1]*world.speed/world.slow));
 				world.sensor (new Vector (Vector.Y, -event.values[0]*world.speed, event.values[0]*world.speed/world.slow));
@@ -894,6 +1057,27 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 * sleep some
 	 * @param time
 	 */
+	public void sleep (long time)
+	{
+		try
+		{
+			java.lang.Thread.sleep (time/1000000);
+		}
+		catch (InterruptedException e)
+		{
+
+		}
+		catch (IllegalArgumentException e) 
+		{
+
+		}
+	}	
+	
+	
+	/**
+	 * sleep some
+	 * @param time
+	 */
 	public void sleep (int time)
 	{
 		try
@@ -939,18 +1123,19 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 	
-	public int time (int from)
+	public long time (long from)
 	{
 		if (from==0)
 		{
 			return 0;
 		}
-		return (int) System.currentTimeMillis()-from;
+		
+		return System.nanoTime()-from;
 	}
 	
-	public int time ()
+	public long time ()
 	{
-		return (int) System.currentTimeMillis();
+		return System.nanoTime();
 	}
 
 	@Override
@@ -960,52 +1145,38 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		debug ("destroing");
 	}
 	
-
-//
-//    public Bitmap SavePixels(GL10 gl)
-//            {
-//                int b[] = new int[Width * Height];
-//                IntBuffer ib = IntBuffer.wrap(b);
-//                ib.position(0);
-//                gl.glReadPixels(0, 0, Width, Height, GL10.GL_RGBA, GL10.GL_UNSIGNED_BYTE, ib);
-//     
-//                // The bytes within the ints are in the wrong order for android, but convert into a
-//                // bitmap anyway. They're also bottom-to-top rather than top-to-bottom. We'll fix
-//                // this up soon using some fast API calls.
-//                Bitmap glbitmap = Bitmap.createBitmap(b, Width, Height, Bitmap.Config.ARGB_4444);
-//                ib = null; // we're done with ib
-//                b = null; // we're done with b, so allow the memory to be freed
-//     
-//                // To swap the color channels, we'll use a ColorMatrix/ColorMatrixFilter. From the Android docs:
-//                //
-//                // This is a 5x4 matrix: [ a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t ]
-//                // When applied to a color [r, g, b, a] the resulting color is computed as (after clamping):
-//                //
-//                // R' = a*R + b*G + c*B + d*A + e;
-//                // G' = f*R + g*G + h*B + i*A + j;
-//                // B' = k*R + l*G + m*B + n*A + o;
-//                // A' = p*R + q*G + r*B + s*A + t;
-//                //
-//                // We want to swap R and B, so the coefficients will be:
-//                // R' = B => 0,0,1,0,0
-//                // G' = G => 0,1,0,0,0
-//                // B' = R => 1,0,0,0,0
-//                // A' = A => 0,0,0,1,0
-//     
-//                final float[] cmVals = { 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0 };
-//     
-//                Paint paint = new Paint();
-//                paint.setColorFilter(new ColorMatrixColorFilter(new ColorMatrix(cmVals))); // our R<->B swapping paint
-//     
-//                Bitmap bitmap = Bitmap.createBitmap(Width, Height, Config.ARGB_4444); // the bitmap we're going to draw onto
-//                Canvas canvas = new Canvas(bitmap); // we draw to the bitmap through a canvas
-//                canvas.drawBitmap(glbitmap, 0, 0, paint); // draw the opengl bitmap onto the canvas, using the color swapping paint
-//                glbitmap = null; // we're done with glbitmap, let go of its memory
-//     
-//                // the image is still upside-down, so vertically flip it
-//                Matrix matrix = new Matrix();
-//                matrix.preScale(1.0f, -1.0f); // scaling: x = x, y = -y, i.e. vertically flip
-//                return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true); // new bitmap, using the flipping matrix
-//            }
-     	
+	private int fix (int input)
+	{
+		int result = 2;
+		while (result<input)
+		{
+			result *= 2;
+		}
+		return result;
+	}
+	
+	public Size size (int image)
+	{
+		return sizes.get(image);
+	}
+	
+	public float width (int image)
+	{
+		return sizes.get(image).width;
+	}
+	
+	public float height (int image)
+	{
+		return sizes.get(image).height;
+	}
+	
+	public int image (int resource)
+	{
+		return images.get(resource);
+	}
+	
+	public void start ()
+	{
+		world.start ();
+	}
 }

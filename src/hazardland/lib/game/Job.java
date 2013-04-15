@@ -1,5 +1,6 @@
 package hazardland.lib.game;
 
+
 import java.util.ArrayList;
 
 public class Job
@@ -15,8 +16,8 @@ public class Job
 	public ArrayList <Job> childs = new ArrayList <Job>();
 	public ArrayList <Target> targets = new ArrayList <Target>();
 	public Entity entity;
-	boolean enabled = true;
-	private int job;
+	protected boolean enabled = true;
+	protected int job;
 	public boolean pause = false;
 	
 	public Job (int type)

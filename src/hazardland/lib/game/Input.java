@@ -52,8 +52,8 @@ public class Input
 		}
 		else
 		{
-			this.vector.x.speed = ((drag.x-from.x)/(time.to-from.time))*world.speed;
-			this.vector.y.speed = ((drag.y-from.y)/(time.to-from.time))*world.speed;
+			this.vector.x.speed = ((drag.x-from.x)/Math.abs(time.to-from.time))*world.speed;
+			this.vector.y.speed = ((drag.y-from.y)/Math.abs(time.to-from.time))*world.speed;
 		}
         if (this.vector.x.speed<0)
         {
@@ -89,8 +89,8 @@ public class Input
 		}
 		else
 		{
-			this.vector.x.speed = ((stop.x-from.x)/(time.to-from.time))*world.speed;
-			this.vector.y.speed = ((stop.y-from.y)/(time.to-from.time))*world.speed;
+			this.vector.x.speed = ((stop.x-from.x)/Math.abs(time.to-from.time))*world.speed;
+			this.vector.y.speed = ((stop.y-from.y)/Math.abs(time.to-from.time))*world.speed;
 		}
         if (this.vector.x.speed<0)
         {
@@ -108,9 +108,8 @@ public class Input
         {
         	this.vector.y.slow = this.vector.y.speed/world.slow;
         }
-        
+        world.stop (this);        
         click = null;
-        world.stop (this);
 	}
 	public static int id (MotionEvent event)
 	{

@@ -1,5 +1,7 @@
 package hazardland.lib.game;
 
+import hazardland.lib.game.job.Move;
+
 public class Vector
 {
 	public static final int X = 0;

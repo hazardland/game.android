@@ -27,32 +27,36 @@ public class Square
 	}
 	
 	
-	public void draw (GL10 gl, int image, float x, float y, float width, float height)
+	public void draw (GL10 gl, int image, Scale scale, float x, float y, float width, float height)
 	{
-		draw (gl, image, x, y, width, height, 0f, 0f, 0f, 0f, 1f);
+		draw (gl, image, scale, x, y, width, height, 0f, 0f, 0f, 0f, 1f);
 	}
 
 	
-	public void draw (GL10 gl, int image, float x, float y, float width, float height, float corner)
+	public void draw (GL10 gl, int image, Scale scale, float x, float y, float width, float height, float corner)
 	{
-		draw (gl, image, x, y, width, height, corner, 0f, 0f, 0f, 1f);
+		draw (gl, image, scale, x, y, width, height, corner, 0f, 0f, 0f, 1f);
 	}
 
 	/** The draw method for the square with the GL context */
-	public void draw (GL10 gl, int image, float x, float y, float width, float height, float corner, float red, float green, float blue, float alpha)
+	public void draw (GL10 gl, int image, Scale scale, float x, float y, float width, float height, float corner, float red, float green, float blue, float alpha)
 	{
+		if (scale==null)
+		{
+			scale = new Scale(new Size(1,1), new Size(1,1));
+		}
 		gl.glPushMatrix();
 		
-		gl.glTranslatef (x, y, 0f); //MOVE !!! 1f is size of figure if called after scaling, 1f is pixel if called before scaling
+		gl.glTranslatef (scale.width(x), scale.height(y), 0f); //MOVE !!! 1f is size of figure if called after scaling, 1f is pixel if called before scaling
 		
 		if (corner!=0)
 		{
-			gl.glTranslatef (width/2, height/2, 0f);
+			gl.glTranslatef (scale.width(width/2), scale.height(height/2), 0f);
 			gl.glRotatef (corner, 0f, 0f, 1f); // ROTATE !!!
-			gl.glTranslatef (-width/2, -height/2, 0f);			
+			gl.glTranslatef (scale.width(-width/2), scale.height(-height/2), 0f);			
 		}
 		
-		gl.glScalef (width, height, 0f); // ADJUST SIZE !!!
+		gl.glScalef (scale.width(width), scale.height(height), 0f); // ADJUST SIZE !!!
 
 		// bind the previously generated texture
 		gl.glBindTexture(GL10.GL_TEXTURE_2D, image);
