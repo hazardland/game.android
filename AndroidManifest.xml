@@ -9,7 +9,7 @@
         android:maxSdkVersion="17" 
         />
 
-    <application android:label="hazardland" android:icon="@drawable/ic_launcher">
+    <application android:label="hazardland">
 
     </application>
 
