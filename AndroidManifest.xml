@@ -9,8 +9,5 @@
         android:maxSdkVersion="17" 
         />
 
-    <application android:label="hazardland">
-
-    </application>
 
 </manifest>
