@@ -14,7 +14,7 @@ Requirements
 Usage
 -----
 We create cloud using resource image located at R.drawable.cloud2
-
+```JAVA
     public class Cloud2 extends Entity
     {
         public Cloud2 (Scene scene)
@@ -23,9 +23,9 @@ We create cloud using resource image located at R.drawable.cloud2
             job (new Move (Move.X, 0-size.width, scene.screen.width, -5, 0, false, 0));
         }
     }
-
+```
 We create scene
-    
+```JAVA    
     public class Scene2 extends Scene
     {
         protected void onCreate (Bundle state)
@@ -74,3 +74,4 @@ We create scene
             world.start ();
         }
     } 
+```
