@@ -100,25 +100,6 @@ public class Entity
 		this (scene, x, y, width, height, null);
 	}
 	
-	public void sprite (String name, float width, float height, int image, int frames)
-	{
-		this.sprites.put (name, new Sprite (0, 0, width, height,
-						Frame.generate (scene, image, 1, frames, frames, 0, 0, width, height)));
-	}
-	
-	public void drag (boolean drag)
-	{
-		if (drag)
-		{
-			touch = true;
-			this.drag = true;
-		}
-		else
-		{
-			drag = false;
-		}
-	}
-	
 	public Entity (Scene scene, float x, float y, float width, float height, Sprite sprite)
 	{
 		this.scene = scene;
@@ -136,6 +117,38 @@ public class Entity
 		if (sprite!=null)
 		{
 			this.sprite = sprites.get ("default");
+		}
+	}
+
+	public void sprite (String name, float width, float height, int image, int frames)
+	{
+		this.sprites.put (name, new Sprite (0, 0, width, height,
+				Frame.generate (scene, image, 1, frames, frames, 0, 0, width, height)));
+	}
+
+    /**
+     * Add a single frame as a default sprite from image to an already created Entity
+     * @param x pick x point from specified image
+     * @param y puck y point from specified image
+     * @param image source image to pick sprite frame from
+     */
+    public void sprite (int x, int y, int image)
+    {
+        sprite = new Sprite (size.width, size.height);
+        sprite.add (scene, image, x, y, size.width, size.height);
+        this.sprites.put ("default", sprite);
+    }
+
+	public void drag (boolean drag)
+	{
+		if (drag)
+		{
+			touch = true;
+			this.drag = true;
+		}
+		else
+		{
+			drag = false;
 		}
 	}
 	
