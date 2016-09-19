@@ -73,7 +73,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	/**
 	 * the game loader thread
 	 */
-	private Thread load;
+	private Thread loader;
 
 	/**
 	 * resource provider object
@@ -249,25 +249,12 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 */
 	public void open (GL10 gl)
 	{
-//		image (gl, R.drawable.progress_background);
-//		image (gl, R.drawable.progress_foreground);
+        // load very few resources here
+        // like progressbar animations resources
+        //
+        // image (gl, R.drawable.progress_background);
+        // image (gl, R.drawable.progress_foreground);
 	}
-
-    /**
-     * this method is called instead of draw (gl) while
-     * you do world.start() from public void load () method
-     * (see load method without gl param)
-     * use this method for example for loader progress bar rendering
-     * @param gl
-     */
-    public void load (GL10 gl)
-    {
-//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
-//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);
-
-        //System.out.println ("loading "+world.load()+"%");
-    }
-
 
 	/**
 	 * initialize viewport
@@ -331,8 +318,8 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
 		//view.queueEvent (this);
 
-		load = new Thread (this);
-		load.start ();
+		loader = new Thread (this);
+		loader.start ();
 
 		//load (gl);
 
@@ -356,21 +343,27 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	@Override
 	public void run ()
 	{
-		load ();
+		loader ();
 	}
 
 
     /**
-     * this method is launched from load thread
+     * this method is launched from loader thread
      * use it for non gl loading purposes
      * but you can also bind textures from it
      * as gl thread is running which watches
      * while you decode bitmaps for texture binding
      * and binds them
      */
-    public void load ()
+    public void loader ()
     {
-        //decode (R.drawable.character_sprite);
+        // decode (R.drawable.character_sprite_1_of_3);
+        // world.loaded (33); //Notify progress to loading(GL10) - world loaded 33%
+        // decode (R.drawable.character_sprite_2_of_3);
+        // world.loaded (66); //Notify progress to loading(GL10) world loaded 66%
+        // decode (R.drawable.character_sprite_3_of_3);
+
+        // world.start(); //start the game
     }
 
 
@@ -380,14 +373,14 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	 * if world.start than it is assumed that game is loaded and running
 	 * therefore is ** scene.draw (GL10 gl) is called
 	 * until world.start it is assumed that we are still loading
-	 * therefore ** scene.load (GL10 gl) is called
+	 * therefore ** scene.loading (GL10 gl) is called
 	 * ---
-	 * world starts in ** scene.load() (a load method without gl parameter)
-	 * if you do not call world.start() in scene.load()
+	 * world starts in ** scene.loader() (a load method without gl parameter)
+	 * if you do not call world.start() in scene.loader()
 	 * than scene.load(GL10 gl) will be called on every frame draw
 	 * ---
-	 * scene.load (GL10 gl) is called every time the frame is going to draw
-	 * scene.load is called once
+	 * scene.loading (GL10 gl) is called every time the frame is going to draw
+	 * scene.loader is called once
 	 * ---
 	 * while loading you can draw a loader or progressbar
 	 * @param gl
@@ -429,7 +422,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		else
 		{
-			load (gl);
+			loading (gl);
 		}
 		if (config.display==Config.FIT && shift>0)
 		{
@@ -437,6 +430,23 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			square.draw (gl, 0, null, 0, display.height, display.width, shift, 0);
 		}
 	}
+
+	/**
+	 * this method is called instead of draw (gl) while
+	 * you do world.start() from public void load () method
+	 * (see load method without gl param)
+	 * use this method for example for loader progress bar rendering
+	 * @param gl
+	 */
+	public void loading (GL10 gl)
+	{
+        //square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
+        //advance progressbar by drawing world.loaded() percent
+        //square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.loaded()*4, 20, 0, 0f, 1f, 0f, 1f);
+
+		//System.out.println ("loading "+world.loaded()+"%");
+	}
+
 
     /**
      * after doing world.start () in scene.load (non gl instance method)
@@ -502,7 +512,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
      */
     public void image (GL10 gl, int resource)
     {
-        if (gl==null || load==null)
+        if (gl==null || loader==null)
         {
             decode (resource);
         }
@@ -590,7 +600,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 
         if (world!=null)
         {
-            world.load (2);
+            world.loaded (2);
         }
     }
 
@@ -610,7 +620,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
             }
         }
         bitmaps.clear ();
-        kill (load);
+        kill (loader);
         finish ();
     }
 
@@ -738,7 +748,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
         }
         if (world!=null)
         {
-            world.load (2);
+            world.loaded (2);
         }
     }
 
@@ -1016,7 +1026,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	{
 		super.onPause ();
 		bitmaps.clear ();
-		kill (load);
+		kill (loader);
 		if (config.sensor)
 		{
 			sensor.unregisterListener (this);

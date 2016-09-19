@@ -5,6 +5,13 @@ game.android
 
 Checkut a simple game source using this framework at https://github.com/hazardland/ferry.android
 
+While some real world applications were done using this tiny framework it still aims to be as simple 
+as possible for learning purposes same time staying full functional. Use it to know what basic 
+happens processes do happen behind the scene of big opengl 2D frameworkes.
+
+Here is a brief illustration of framework lifecycle:
+
+![Screenshot](./game.png)
 
 Requirements
 ------------
@@ -41,17 +48,19 @@ We create scene
             image (gl, R.drawable.progress_foreground);
         }
         //progress loading, progress loading, progress loading...
-        public void load (GL10 gl)
+        public void loading (GL10 gl)
         {
             square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
             square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);
+            //System.out.println ("loading "+world.loaded()+"%");
         }
         //here is actually what we load:
-        public void load ()
+        public void loader ()
         {
             decode (R.drawable.sky);
             decode (R.drawable.bird1);
             decode (R.drawable.bird2);
+            world.loaded(55); //world loaded progress 50%
             decode (R.drawable.bird3);
             decode (R.drawable.cloud1);
             //We load cloud image as well as other images
@@ -146,7 +155,7 @@ public class Main extends Scene
         //Initialize gl scene
         create (state);
     }
-    public void load ()
+    public void loader ()
     {
         //Load image texture into GPU RAM
         decode (R.drawable.cards);

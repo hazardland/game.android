@@ -18,7 +18,7 @@ public class World
 	public float height;
 	public float speed = 1;
 	public float slow = 100;
-	private int load  = 0;
+	private int loaded  = 0;
 	public boolean pause = false;
 	public boolean hit = false;
 	public boolean touch = false;
@@ -155,22 +155,22 @@ public class World
 		}		
 	}
 	
-	public int load ()
+	public int loaded ()
 	{
-		return load;
+		return loaded;
 	}
 	
-	public int load (int load)
+	public int loaded (int loaded)
 	{
-		if (this.load+load>99)
+		if (this.loaded+loaded>99)
 		{
-			this.load = 99;
+			this.loaded = 99;
 		}
 		else
 		{
-			this.load += load;
+			this.loaded += loaded;
 		}
-		return this.load;
+		return this.loaded;
 	}
 	
 	public void start ()
@@ -192,7 +192,7 @@ public class World
 				sensor = true;
 			}		
 		}		
-		load = 100;
+		loaded = 100;
 		start = true;
 		pause = false;
 	}
