@@ -7,7 +7,7 @@ Checkut a simple game source using this framework at https://github.com/hazardla
 
 While some real world applications were done using this tiny framework it still aims to be as simple 
 as possible for learning purposes same time staying full functional. Use it to know what basic 
-happens processes do happen behind the scene of big opengl 2D frameworkes.
+processes do happen behind the scene of big opengl 2D frameworks.
 
 Here is a brief illustration of framework lifecycle:
 
@@ -86,7 +86,7 @@ We create scene
 ```
 
 
-Drow a dragable cards
+Draw a dragable cards
 ------------------
 I took http://www.luckyladygames.com/wp-content/uploads/2013/08/videopoker_cards.gif and saved as PNG in photoshop then added as a resource R.drawable.cards
 
