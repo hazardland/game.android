@@ -330,8 +330,8 @@ public class Move extends Job
 	
 //	public static Move to (int type, Position from, Point to, float speed)
 //	{
-//		//Point up = new Point(scene.hay.from.x+scene.hay.to.x, scene.hay.from.y+scene.hay.to.y);
-//		//Point down = new Point(scene.hay.from.x+scene.hay.DOWN.x, scene.hay.from.y+scene.hay.DOWN.y);
+//		//Point UP = new Point(scene.hay.from.x+scene.hay.to.x, scene.hay.from.y+scene.hay.to.y);
+//		//Point DOWN = new Point(scene.hay.from.x+scene.hay.DOWN.x, scene.hay.from.y+scene.hay.DOWN.y);
 //		float speedY = 1;
 //		float speedX = 1;
 //		int directionX = 1;

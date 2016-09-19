@@ -4,7 +4,7 @@ public class Switch extends Entity
 {
 	private String off = "off";
 	private String on = "on";
-	private String disable = "disable";
+	private String disable = "DISABLE";
 	private boolean active = false;
 	public Switch (Scene scene, float x, float y, float width, float height, int image)
 	{
