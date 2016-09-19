@@ -1060,7 +1060,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	}
 
 	/**
-	 * do some action with sounds see constants of class Sound
+	 * do some action with sounds see constants of class Sound.PLAY, Sound.STOP
 	 * @param sound
 	 */
 	public int sound (int action, int sound)
@@ -1088,7 +1088,11 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 		return result;
 	}
-	
+
+    /**
+     * prepare music resource
+     * @param music
+     */
 	public void music (int music)
 	{
 		if (this.config.music)
@@ -1097,11 +1101,23 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 
+    /**
+     * do action with music resource
+     * Music.PLAY, Music.STOP, Music.PAUSE
+     * @param action
+     * @param music
+     */
 	public void music (int action, int music)
 	{
 		music (action, music, 0);
 	}
-	
+
+    /**
+     * use this to set music volume with action Music.VOLUME and volume float config
+     * @param action
+     * @param music
+     * @param config
+     */
 	public void music (int action, int music, float config)
 	{
 		if (this.config.music)
@@ -1137,7 +1153,12 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			}
 		}
 	}
-	
+
+    /**
+     * attach job to music complete
+     * @param music
+     * @param job
+     */
 	public void music (int music, Music job)
 	{
 		if (musics.get(music)!=null)
