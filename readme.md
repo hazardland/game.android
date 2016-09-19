@@ -49,14 +49,14 @@ We create scene
         //here is actually what we load:
         public void load ()
         {
-            image (R.drawable.sky);
-            image (R.drawable.bird1);
-            image (R.drawable.bird2);
-            image (R.drawable.bird3);
-            image (R.drawable.cloud1);
+            decode (R.drawable.sky);
+            decode (R.drawable.bird1);
+            decode (R.drawable.bird2);
+            decode (R.drawable.bird3);
+            decode (R.drawable.cloud1);
             //We load cloud image as well as other images
-            image (R.drawable.cloud2);
-            image (R.drawable.cloud3);
+            decode (R.drawable.cloud2);
+            decode (R.drawable.cloud3);
             hold ();
 
             //This is some class like cloud extending Entity class

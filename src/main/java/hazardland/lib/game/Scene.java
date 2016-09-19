@@ -156,36 +156,18 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	
 	private int rotation;
 	
-    /**
-     * call this method to init the scene from activity onCreate method
-     * @param state
-     * its a bundle provided on onCreate method
+	/**
+	 * initializing viewport
+	 * set window properties (width, height, fullscreen, orientation based on config)
+	 * initialize touch listener if config.sensor
+	 * initialize sound if config.sound
+	 * initialize music if config.music
+	 * @param state
      */
-	
-	public void receive (Bundle state)
-	{
-		if (state==null)
-		{
-			return;
-		}
-		if (state.containsKey("sound"))
-		{
-			config.sound = state.getBoolean("sound");
-		}
-		if (state.containsKey("music"))
-		{
-			config.music = state.getBoolean("music");
-		}		
-		if (state.containsKey("text"))
-		{
-			config.text = state.getBoolean("text");
-		}
-	}
-
     public void create (Bundle state)
     {
     	super.onCreate (state);
-    	receive (getIntent().getExtras());
+    	restore (getIntent().getExtras());
     	if (config.fullscreen)
     	{
     		requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -218,7 +200,198 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	        accelerometer = sensor.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 		}        
     }
-    
+
+	/**
+	 * setup viewport
+	 * and call scene.open(GL10 gl)
+	 * this method is called once when after an activity is created
+	 * @param gl
+	 * @param config
+     */
+	public void onSurfaceCreated(GL10 gl, EGLConfig config)
+	{
+		gl.glEnable(GL10.GL_TEXTURE_2D);			//Enable Texture Mapping ( NEW )
+		gl.glShadeModel(GL10.GL_SMOOTH); 			//Enable Smooth Shading
+		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); 	//Black Background
+		gl.glClearDepthf(1.0f); 					//Depth Buffer Setup
+		gl.glEnable(GL10.GL_DEPTH_TEST); 			//Enables Depth Testing
+		gl.glDepthFunc(GL10.GL_LEQUAL); 			//The Type Of Depth Testing To Do
+
+		gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+		gl.glEnable(GL10.GL_BLEND);
+
+
+		//Really Nice Perspective Calculations
+		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+
+		open (gl);
+		debug ("creating");
+//		if (opengl2())
+//		{
+//			debug ("opengl 2 detected");
+//		}
+//		else
+//		{
+//			debug ("opengl 2 not detected");
+//		}
+	}
+
+	/**
+	 * do the very first things in this method
+	 * it is called after config is affected and
+	 * scene is created from onSurfaceCreated method
+	 *
+	 * warn yourself that you cant draw from this method
+	 * just load some first stuff
+	 * like loader progress bar images or somethin
+	 * @param gl
+	 * also you can use that object for texture binding
+	 */
+	public void open (GL10 gl)
+	{
+//		image (gl, R.drawable.progress_background);
+//		image (gl, R.drawable.progress_foreground);
+	}
+
+    /**
+     * this method is called instead of draw (gl) while
+     * you do world.start() from public void load () method
+     * (see load method without gl param)
+     * use this method for example for loader progress bar rendering
+     * @param gl
+     */
+    public void load (GL10 gl)
+    {
+//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
+//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);
+
+        //System.out.println ("loading "+world.load()+"%");
+    }
+
+
+	/**
+	 * initialize viewport
+	 * called when activity created or when activity changed i.e. rotate and etc
+	 * and start loader thread
+	 * world object is initialized
+	 * loader thread is started
+	 * @param gl
+	 * @param width
+	 * @param height
+	 */
+	@Override
+	public void onSurfaceChanged (GL10 gl, int width, int height)
+	{
+		if (ready)
+		{
+			return;
+		}
+
+		rotation = getWindowManager().getDefaultDisplay().getRotation();
+
+		if (config.display==Config.FIT)
+		{
+			display = new Size (width, width/(screen.width/screen.height));
+			shift = (height-display.height)/2;
+		}
+		else if (config.display==Config.STRETCH)
+		{
+			display = new Size (width, height);
+		}
+
+		scale = new Scale (new Size (screen.width, screen.height), new Size (display.width, display.height));
+		input = new Scale (new Size (display.width, display.height), new Size (screen.width, screen.height));
+
+		//gl.glViewport (0, 0, (int)display.width, (int)display.height); // Reset The Current Viewport
+		gl.glViewport (0, 0, width, height); // Reset The Current Viewport
+		gl.glMatrixMode (GL10.GL_PROJECTION); // Select The Projection Matrix
+		gl.glLoadIdentity (); // Reset The Projection Matrix
+
+		gl.glOrthof (0, width, 0, height, -1f, 1f);
+
+		if (config.display==Config.FIT)
+		{
+			gl.glTranslatef (0f, shift, 0.0f); // move the camera !!
+		}
+
+		gl.glMatrixMode (GL10.GL_MODELVIEW); // Select The Modelview Matrix
+		gl.glLoadIdentity (); // Reset The Modelview Matrix
+
+		System.out.println ("width and height is " + display.width + "x" + display.height
+				+ " scale is " + scale.width + "x" + scale.height);
+		System.out.println ("android version is "+Build.VERSION.RELEASE+" rotation is "+rotation);
+
+		//android.view.Display
+
+
+
+		world = new World (0, 0, screen.width, screen.height);
+
+		//debug ("surface changed world elements "+world.entities.size());
+
+		//view.queueEvent (this);
+
+		load = new Thread (this);
+		load.start ();
+
+		//load (gl);
+
+		if (config.sensor)
+		{
+			//sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
+			//System.out.println ("orientation is " + getResources().getConfiguration().);
+		}
+
+		ready = true;
+	}
+
+	/**
+	 * Here is a thread method run
+	 * which is executed after calling:
+	 *	  load = new Thread (this);
+	 *	  load.start ();
+	 * from onSurfaceChanged
+	 * it is called once a surface is changed
+	 */
+	@Override
+	public void run ()
+	{
+		load ();
+	}
+
+
+    /**
+     * this method is launched from load thread
+     * use it for non gl loading purposes
+     * but you can also bind textures from it
+     * as gl thread is running which watches
+     * while you decode bitmaps for texture binding
+     * and binds them
+     */
+    public void load ()
+    {
+        //decode (R.drawable.character_sprite);
+    }
+
+
+    /**
+	 * drawing a frame
+	 * drawing happens
+	 * if world.start than it is assumed that game is loaded and running
+	 * therefore is ** scene.draw (GL10 gl) is called
+	 * until world.start it is assumed that we are still loading
+	 * therefore ** scene.load (GL10 gl) is called
+	 * ---
+	 * world starts in ** scene.load() (a load method without gl parameter)
+	 * if you do not call world.start() in scene.load()
+	 * than scene.load(GL10 gl) will be called on every frame draw
+	 * ---
+	 * scene.load (GL10 gl) is called every time the frame is going to draw
+	 * scene.load is called once
+	 * ---
+	 * while loading you can draw a loader or progressbar
+	 * @param gl
+     */
 	@Override
 	public void onDrawFrame (GL10 gl)
 	{
@@ -232,7 +405,12 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			for (int resource: bitmaps.keySet ())
 			{
 				debug ("image: entering binder for resource "+resource);
+                //here comes decode(R.drawable.something) from decode method for binding
 				image (gl, resource);
+                //@TODO try bind (gl, resource) instead of image(gl,resource)
+                //because it seems that why decoding twice same image ?
+                //if load thread is running it only binds it
+                //assuming bitmap is already decoded
 			}
 		}
 		else
@@ -260,101 +438,321 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 
-	@Override
-	public void onSurfaceChanged (GL10 gl, int width, int height)
+    /**
+     * after doing world.start () in scene.load (non gl instance method)
+     * it gl thread will call scene.draw method for drawing instead of scene.load (gl) method
+     * @param gl
+     */
+    public void draw (GL10 gl)
+    {
+//		for (Entity entity : world.entities)
+//		{
+//			entity.draw (gl, scale);
+//		}
+        for (int position=0; position<world.entities.size(); position++)
+        {
+            world.entities.get(position).draw(gl,scale);
+        }
+        if (time(last)<config.refresh*1000000)
+        {
+            //debug ("pausing "+((config.refresh*1000000-time(last))/1000000));
+            sleep (config.refresh*1000000-time(last));
+            last = time();
+        }
+        else
+        {
+            //debug ("skipping pause cause time(last) time from last sleep is "+time(last));
+            last = time();
+        }
+
+    }
+
+	/**
+	 * restore media state leaved when pausing activity
+	 * called from activity onCreate method
+	 * @param state
+	 */
+
+	public void restore (Bundle state)
 	{
-		if (ready)
+		if (state==null)
 		{
 			return;
 		}
-		
-		rotation = getWindowManager().getDefaultDisplay().getRotation();
-
-		if (config.display==Config.FIT)
+		if (state.containsKey("sound"))
 		{
-			display = new Size (width, width/(screen.width/screen.height));
-			shift = (height-display.height)/2;
+			config.sound = state.getBoolean("sound");
 		}
-		else if (config.display==Config.STRETCH)
+		if (state.containsKey("music"))
 		{
-			display = new Size (width, height);
+			config.music = state.getBoolean("music");
 		}
-		
-		scale = new Scale (new Size (screen.width, screen.height), new Size (display.width, display.height));
-		input = new Scale (new Size (display.width, display.height), new Size (screen.width, screen.height));
-
-		//gl.glViewport (0, 0, (int)display.width, (int)display.height); // Reset The Current Viewport
-		gl.glViewport (0, 0, width, height); // Reset The Current Viewport
-		gl.glMatrixMode (GL10.GL_PROJECTION); // Select The Projection Matrix
-		gl.glLoadIdentity (); // Reset The Projection Matrix
-
-		gl.glOrthof (0, width, 0, height, -1f, 1f);
-		
-		if (config.display==Config.FIT)
+		if (state.containsKey("text"))
 		{
-			gl.glTranslatef (0f, shift, 0.0f); // move the camera !!			
+			config.text = state.getBoolean("text");
 		}
-		
-		gl.glMatrixMode (GL10.GL_MODELVIEW); // Select The Modelview Matrix
-		gl.glLoadIdentity (); // Reset The Modelview Matrix
-		
-		System.out.println ("width and height is " + display.width + "x" + display.height
-				+ " scale is " + scale.width + "x" + scale.height);
-		System.out.println ("android version is "+Build.VERSION.RELEASE+" rotation is "+rotation);
-		
-		//android.view.Display
-		
-		
-		
-		world = new World (0, 0, screen.width, screen.height);
-		
-		//debug ("surface changed world elements "+world.entities.size());
-		
-		//view.queueEvent (this);
-		
-		load = new Thread (this);
-		load.start ();
-		
-		//load (gl);
-		
-		if (config.sensor)
-		{
-			//sensor.registerListener (this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
-			//System.out.println ("orientation is " + getResources().getConfiguration().);
-		}
-		
-		ready = true;
 	}
 
-	public void onSurfaceCreated(GL10 gl, EGLConfig config) 
-	{
-		gl.glEnable(GL10.GL_TEXTURE_2D);			//Enable Texture Mapping ( NEW )
-		gl.glShadeModel(GL10.GL_SMOOTH); 			//Enable Smooth Shading
-		gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); 	//Black Background
-		gl.glClearDepthf(1.0f); 					//Depth Buffer Setup
-		gl.glEnable(GL10.GL_DEPTH_TEST); 			//Enables Depth Testing
-		gl.glDepthFunc(GL10.GL_LEQUAL); 			//The Type Of Depth Testing To Do
-		
-        gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
-        gl.glEnable(GL10.GL_BLEND);
-		
+    /**
+     * decode bitmap and bind texture (if gl instance is present and load thread is not running)
+     * or decode bitmap for further texture bind call (if gl==null)
+     * or texture bind which was previously decoded
+     * @param gl
+     * @param resource
+     */
+    public void image (GL10 gl, int resource)
+    {
+        if (gl==null || load==null)
+        {
+            decode (resource);
+        }
 
-		//Really Nice Perspective Calculations
-		gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
-		
-		open (gl);
-		debug ("creating");
-//		if (opengl2())
-//		{
-//			debug ("opengl 2 detected");
-//		}
-//		else
-//		{
-//			debug ("opengl 2 not detected");
-//		}
-	
-	}
-	
+        if (gl!=null)
+        {
+            bind (gl, resource);
+        }
+    }
+
+    /**
+     * We are using decode only in scene.load()
+     * which is run in independent thread
+     * decode method prepares images for main thread in bitmaps array
+     * resource_id => decoded image bitmap
+     * and waits until onDrawFrame method binds them (in main thread)
+     * ---
+     * Why images are decoded in load thread and bind in onDrawFrame method ?
+     * because onDrawFrame has gl instance and load thread does not
+     *
+     * As we are not in main thread we wait as much as onDrawFrame requires to bind previous image
+     * Also we could add next decoded image as soon as possible
+     * but it is not good to hold onDrawFrame longer because next frames are waiting
+     * to be drawn
+     *
+     * @param resource
+     * specify android drawable resource id
+     */
+    public void decode (int resource)
+    {
+        debug ("decoding "+resource);
+        while (bitmaps.size()>1)
+        {
+            sleep (25);
+        }
+        BitmapFactory.Options options = new BitmapFactory.Options ();
+        options.inScaled = false;
+        InputStream input = null;
+
+        try
+        {
+            input = resources.openRawResource (resource);
+        }
+        catch (Resources.NotFoundException error)
+        {
+            System.out.println ("image: resource not found "+resource);
+        }
+
+        if (input==null)
+        {
+            fail ();
+        }
+
+        try
+        {
+            bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
+            System.out.println ("image: decoded image "+resource);
+        }
+        catch (NullPointerException pointer)
+        {
+            System.out.println ("image: failed to decode image "+resource);
+            fail ();
+        }
+        catch (OutOfMemoryError error)
+        {
+            System.out.println ("image: out of memory while decoding image "+resource);
+            fail ();
+        }
+        finally
+        {
+            //System.out.println ("image: unknown error while decoding image "+resource);
+            try
+            {
+                input.close ();
+            }
+            catch (IOException e)
+            {
+                System.out.println ("image: io error while closing image stream "+resource);
+            }
+            //fail ();
+        }
+
+
+        System.out.println ("image: textures left to load " + bitmaps.size ());
+
+        if (world!=null)
+        {
+            world.load (2);
+        }
+    }
+
+    /**
+     * one of bitmaps failed to extract
+     * recycle all previous bitmaps (basically current) from buffer
+     * because onDrawFrame will try to add corrupted bitmap again and again
+     */
+    public void fail ()
+    {
+        debug ("image: global fail");
+        for (Bitmap bitmap : bitmaps.values())
+        {
+            if (!bitmap.isRecycled())
+            {
+                bitmap.recycle();
+            }
+        }
+        bitmaps.clear ();
+        kill (load);
+        finish ();
+    }
+
+    /**
+     * binds decoded image from bitmaps array
+     * to an opengl resource and stores returned opengl resource id
+     * in resources array
+     * android_resource_id -> opengl_resource_id
+     * @param gl
+     * @param resource
+     */
+    public void bind (GL10 gl, int resource)
+    {
+
+        if (bitmaps.get(resource)==null || bitmaps.get(resource).isRecycled())
+        {
+            System.out.println ("image: bind bitmap null or recycled " + resource);
+            return;
+        }
+        else
+        {
+            sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));
+        }
+
+        Size size = sizes.get (resource);
+
+        int[] temp = new int[1];
+        gl.glGenTextures (1, temp, 0);
+        int id = temp[0];
+
+        //System.out.println ("texture binding id is " + id);
+
+        // int id = next (gl);
+        images.put (resource, id);
+
+        System.out.println ("image: texture binding id is " + id);
+
+        gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
+
+        gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+        gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
+
+        gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
+        gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
+
+        gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
+
+
+        int width = (int)size.width;
+        int height = (int)size.height;
+
+        if (width!=size.width)
+        {
+            width += 1;
+        }
+
+        if (height!=size.height)
+        {
+            height += 1;
+        }
+
+        width = fix (width);
+        height = fix (height);
+
+        Bitmap resize = null;
+
+        if (width!=size.width || height!=size.height)
+        {
+            //resize = Bitmap.createBitmap(bitmaps.get(resource), 0, 0, width, height);
+            try
+            {
+                resize = Bitmap.createScaledBitmap(bitmaps.get(resource), width, height, false);
+                bitmaps.get(resource).recycle();
+                debug ("scale: scaling from "+size.width+"x"+size.height+" to "+width+"x"+height);
+                //Bitmap.create
+            }
+            catch (OutOfMemoryError e)
+            {
+
+            }
+        }
+
+        if (resize!=null)
+        {
+            GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, resize, 0);
+            resize.recycle();
+        }
+        else
+        {
+            GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
+            debug ("scale: skipped for "+size.width+"x"+size.height+" image");
+        }
+
+        //Bitmap.createBitmap(source, x, y, width, height);
+
+
+
+        System.out.println ("image: bind success for image " + resource);
+
+        if (bitmaps!=null && bitmaps.get(resource)!=null)
+        {
+            if (!bitmaps.get(resource).isRecycled())
+            {
+                //sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));
+                try
+                {
+                    bitmaps.get (resource).recycle ();
+                    System.out.println ("image: putting size for " + resource);
+                }
+                catch (Exception e)
+                {
+                    System.out.println ("image: bind recycle unknow error for image " + resource);
+                }
+            }
+            else
+            {
+                System.out.println ("image: strange binded image " + resource + " already recycled");
+            }
+            bitmaps.remove (resource);
+            System.out.println ("image: removed binded resource "+resource);
+        }
+        else
+        {
+            System.out.println ("image: strange binded image " + resource + " already unset");
+        }
+        if (world!=null)
+        {
+            world.load (2);
+        }
+    }
+
+    /**
+     * opengl has its own image id while app has its own
+     * to get opengls image id we use image method
+     * @param resource
+     * @return
+     */
+    public int image (int resource)
+    {
+        return images.get(resource);
+    }
+
 	/**
 	 * spread the world with pause signal
 	 * every entity.pause () will be called an entity wil; deside what to do
@@ -402,39 +800,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 			world.resume (type);
 		}
 	}
-	
 
-	
-	/**
-	 * do the very first things in this method
-	 * it is called after config is affected and
-	 * scene is created
-	 * 
-	 * warn yourself that you cant draw from this method
-	 * just load some first stuff
-	 * like loader progress bar images or somethin
-	 * @param gl
-	 * also you can use that object for texture binding 
-	 */
-	public void open (GL10 gl)
-	{
-//		image (gl, R.drawable.progress_background);
-//		image (gl, R.drawable.progress_foreground);		
-	}
-	
-	
-	/**
-	 * this method is lounched from load thread
-	 * use it for non gl loading purposes
-	 * but you can also bind textures from it
-	 * as gl thread is runing wich watches
-	 * while you decode bitmaps for texture binding
-	 * and binds them
-	 */
-	public void load ()
-	{
-		
-	}
 	
 	/**
 	 * goto another scene
@@ -476,274 +842,7 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		overridePendingTransition(anim.fade_in, anim.fade_out);		
 	}
 	
-	/**
-	 * this method is called instead of draw (gl) while
-	 * you do world.start() from public void load () method
-	 * (see load method without gl param)
-	 * use this method for example for loader progress bar rendering
-	 * @param gl
-	 */
-	public void load (GL10 gl)
-	{
-//		square.draw (gl, images.get (R.drawable.progress_background), display.width/2-206, display.height/2-20, 412f, 40f);
-//		square.draw (gl, images.get (R.drawable.progress_foreground), display.width/2-200, display.height/2-10, world.load()*4, 20, 0, 0f, 1f, 0f, 1f);		
-		
-		//System.out.println ("loading "+world.load()+"%");
-	}
-	
-	/**
-	 * after doing world.start () in scene.load (non gl instance method)
-	 * it gl thread will call scene.draw method for drawing instead of scene.load (gl) method 
-	 * @param gl
-	 */
-	public void draw (GL10 gl)
-	{
-//		for (Entity entity : world.entities)
-//		{
-//			entity.draw (gl, scale);
-//		}
-		for (int position=0; position<world.entities.size(); position++) 
-		{
-			world.entities.get(position).draw(gl,scale);
-		}		
-		if (time(last)<config.refresh*1000000)
-		{
-			//debug ("pausing "+((config.refresh*1000000-time(last))/1000000));
-			sleep (config.refresh*1000000-time(last));
-			last = time();
-		}
-		else
-		{
-			//debug ("skipping pause cause time(last) time from last sleep is "+time(last));
-			last = time();
-		}
-		
-	}
-	
-	
-	/**
-	 * decode bitmap and bind texture (if gl instance is presenet and load thread is not runing)
-	 * or decode bitmap for further texture bind call (if gl==null)
-	 * or texture bind which was previously decoded
-	 * @param gl
-	 * @param resource
-	 */
-	public void image (GL10 gl, int resource)
-	{
-		if (gl==null || load==null)
-		{
-			decode (resource);
-		}
 
-		if (gl!=null)
-		{
-			bind (gl, resource);
-		}
-	}
-	
-	/**
-	 * just decode image for further texture binding
-	 * usually called from non gl instance load method
-	 * it prepares bitmaps for binding from parallel thread
-	 * @param resource
-	 * specify android drawable resource id
-	 */	
-	public void decode (int resource)
-	{
-		while (bitmaps.size()>1)
-		{
-			sleep (25);
-		}
-		BitmapFactory.Options options = new BitmapFactory.Options ();
-		options.inScaled = false;
-		InputStream input = null;
-
-		try 
-		{
-			input = resources.openRawResource (resource);	
-		} 
-		catch (Resources.NotFoundException error) 
-		{
-			System.out.println ("image: resource not found "+resource);
-		}
-		
-		if (input==null)
-		{
-			fail ();
-		}
-		
-		try
-		{
-			bitmaps.put (resource, BitmapFactory.decodeStream (input, null, options));
-			System.out.println ("image: decoded image "+resource);
-		}
-		catch (NullPointerException pointer) 
-		{
-			System.out.println ("image: failed to decode image "+resource);
-			fail ();
-		}
-		catch (OutOfMemoryError error) 
-		{
-			System.out.println ("image: out of memory while decoding image "+resource);
-			fail ();
-		}
-		finally
-		{
-			//System.out.println ("image: unknown error while decoding image "+resource);
-			try
-			{
-				input.close ();
-			}
-			catch (IOException e)
-			{
-				System.out.println ("image: io error while closing image stream "+resource);
-			}
-			//fail ();
-		}
-		
-		
-		System.out.println ("image: textures left to load " + bitmaps.size ());
-		
-		if (world!=null)
-		{
-			world.load (2);
-		}		
-	}
-	
-	public void fail ()
-	{
-		debug ("image: global fail");
-		for (Bitmap bitmap : bitmaps.values())
-		{
-			if (!bitmap.isRecycled())
-			{
-				bitmap.recycle();
-			}
-		}
-		bitmaps.clear ();
-		kill (load);
-		finish ();		
-	}
-	
-	public void bind (GL10 gl, int resource)
-	{
-
-		if (bitmaps.get(resource)==null || bitmaps.get(resource).isRecycled())
-		{
-			System.out.println ("image: bind bitmap null or recycled " + resource);
-			return;
-		}
-		else
-		{
-			sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));			
-		}
-		
-		Size size = sizes.get (resource);
-		
-		int[] temp = new int[1];
-		gl.glGenTextures (1, temp, 0);
-		int id = temp[0];
-
-		//System.out.println ("texture binding id is " + id);
-
-		// int id = next (gl);
-		images.put (resource, id);
-
-		System.out.println ("image: texture binding id is " + id);		
-		
-		gl.glBindTexture (GL10.GL_TEXTURE_2D, id);
-
-		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
-		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_LINEAR);
-
-		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_S, GL10.GL_CLAMP_TO_EDGE);
-		gl.glTexParameterf (GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_WRAP_T, GL10.GL_CLAMP_TO_EDGE);
-
-		gl.glTexEnvf (GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE, GL10.GL_REPLACE);
-		
-		
-		int width = (int)size.width;
-		int height = (int)size.height;
-		
-		if (width!=size.width)
-		{
-			width += 1;
-		}
-		
-		if (height!=size.height)
-		{
-			height += 1;
-		}
-		
-		width = fix (width);
-		height = fix (height);
-
-		Bitmap resize = null;
-		
-		if (width!=size.width || height!=size.height)
-		{
-			//resize = Bitmap.createBitmap(bitmaps.get(resource), 0, 0, width, height);
-			try
-			{
-				resize = Bitmap.createScaledBitmap(bitmaps.get(resource), width, height, false);
-				bitmaps.get(resource).recycle();
-				debug ("scale: scaling from "+size.width+"x"+size.height+" to "+width+"x"+height);
-				//Bitmap.create
-			}
-			catch (OutOfMemoryError e)
-			{
-				
-			}
-		}
-		
-		if (resize!=null)
-		{
-			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, resize, 0);
-			resize.recycle();
-		}
-		else
-		{
-			GLUtils.texImage2D (GL10.GL_TEXTURE_2D, 0, bitmaps.get (resource), 0);
-			debug ("scale: skipped for "+size.width+"x"+size.height+" image");
-		}
-		
-		//Bitmap.createBitmap(source, x, y, width, height);
-
-
-		
-		System.out.println ("image: bind success for image " + resource);
-		
-		if (bitmaps!=null && bitmaps.get(resource)!=null)
-		{
-			if (!bitmaps.get(resource).isRecycled())
-			{
-				//sizes.put (resource, new Size (bitmaps.get(resource).getWidth (), bitmaps.get(resource).getHeight ()));				
-				try
-				{
-					bitmaps.get (resource).recycle ();
-					System.out.println ("image: putting size for " + resource);
-				}
-				catch (Exception e) 
-				{
-					System.out.println ("image: bind recycle unknow error for image " + resource);
-				}
-			}
-			else
-			{
-				System.out.println ("image: strange binded image " + resource + " already recycled");
-			}
-			bitmaps.remove (resource);
-			System.out.println ("image: removed binded resource "+resource);
-		}
-		else
-		{
-			System.out.println ("image: strange binded image " + resource + " already unset");
-		}
-		if (world!=null)
-		{
-			world.load (2);
-		}		
-	}
 	
 //	public int text (GL10 gl, int resource, String text, int size, String font)
 //	{
@@ -1047,12 +1146,6 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 		}
 	}
 	
-	@Override
-	public void run ()
-	{
-		load ();
-	}
-	
 	/**
 	 * sleep some
 	 * @param time
@@ -1168,11 +1261,6 @@ public class Scene extends Activity implements Renderer,OnTouchListener,SensorEv
 	public float height (int image)
 	{
 		return sizes.get(image).height;
-	}
-	
-	public int image (int resource)
-	{
-		return images.get(resource);
 	}
 	
 	public void start ()
